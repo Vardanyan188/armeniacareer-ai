@@ -56,6 +56,11 @@ hardened through iterative development, regression testing, and human review."
 
 - Interview Practice: progress strip; a **weak** answer → adaptive follow-up; a
   **strong** answer advances. *"Deterministic, supportive, private — not stored."*
+- **Multilingual interview check:** switch the sidebar **Language** to Հայերեն (and
+  Русский) and re-open Interview Practice — questions, follow-ups, feedback bands,
+  and the recruiter Verification Interview render in natural Armenian/Russian with
+  **no API keys**. *"Armenian-first, hardened through iterative development, testing,
+  and human review."*
 - Skill Quiz: deterministic questions + study-next suggestions.
 
 ## 3. Recruiter Mode

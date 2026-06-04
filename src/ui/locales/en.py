@@ -120,4 +120,40 @@ STRINGS = {
     "cv.report.role_directions": "Possible role directions",
     "cv.report.improvement": "Improvement suggestions",
     "cv.report.no_issues": "No major structural issues detected. Strong CV foundation.",
+
+    # Interview (candidate practice + recruiter verification)
+    "interview.practice_title": "Interview Practice",
+    "interview.practice_notice": (
+        "Practice mode — private, supportive coaching. Your answers are not stored or shared."
+    ),
+    "interview.question": "Question",
+    "interview.answered": "Answered",
+    "interview.avg_score": "Avg score",
+    "interview.target": "Target",
+    "interview.session_progress": "Session progress",
+    "interview.on_track": "On track — your average meets the target.",
+    "interview.keep_going": "Keep going — aim to lift your average toward the target.",
+    "interview.current_question": "Current question",
+    "interview.your_answer": "Your answer",
+    "interview.your_answer_prefix": "Your answer",
+    "interview.submit": "Submit answer",
+    "interview.skip": "Skip question",
+    "interview.end": "End session",
+    "interview.write_answer": "Write an answer before submitting.",
+    "interview.complete": "Practice session complete. Review the feedback above.",
+    "interview.avg_answer_score": "Average answer score",
+    "interview.restart": "Restart practice",
+    "interview.followup": "Follow-up",
+    "interview.verify_title": "Verification Interview",
+    "interview.verify_notice": (
+        "Structured, evidence-based verification guide for manual evaluation. "
+        "Decision-support only — the recruiter judges the answers."
+    ),
+    "interview.no_questions": "No verification questions generated for this analysis.",
+    "interview.strong_header": "A strong answer should contain",
+    "interview.weak_header": "Weak / unclear answers may indicate",
+    "interview.followups_header": "Suggested follow-ups",
+    "interview.must_ask": "Must ask",
+    "interview.recommended": "Recommended",
+    "interview.optional": "Optional",
 }

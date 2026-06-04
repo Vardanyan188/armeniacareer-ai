@@ -495,6 +495,21 @@ Deterministic-first, defense-in-depth. Full detail in
 - **Safety:** public-demo behavior is unchanged — the selector is presentational,
   no provider/API logic changed, gates still default off, deterministic offline.
 
+### Multilingual interview foundation (Phase 24.3C)
+
+- **Additive localizer** (`src/engine/interview/localizer.py` + `templates.py`)
+  **regenerates** natural EN/HY/RU interview text from the engine's structured
+  question objects (kind + target) — **not** machine translation. The interview
+  engine core is unchanged.
+- Localized surfaces: candidate practice questions, follow-ups, feedback bands,
+  the completion summary, and the recruiter **Verification Interview** (question +
+  strong/weak indicators + follow-ups, by gap-probe vs. verify category).
+- **Armenian-first**, hand-authored for professional phrasing; **deterministic and
+  key-free** (no provider calls, no prompts/secrets/errors exposed). An optional
+  LLM enhancement could later wrap the localizer without changing this floor.
+- **Remaining English:** dynamic per-answer feedback sentences and improvement
+  tips from `answer_eval`, and recorded history prompts.
+
 ---
 
 ## 16. Privacy and Governance

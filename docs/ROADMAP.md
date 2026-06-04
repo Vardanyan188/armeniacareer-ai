@@ -24,7 +24,8 @@
 | 22–23 — Security & academics | Security hardening, prompt protection, audit logs, deployment gates, academic deliverables. |
 | 24.0–24.2 — Parser & CV intelligence | Robust section/skill parsing, multilingual + open-vocabulary extraction, CV quality advisory layer. |
 | 24.3A+B — Brand & i18n foundation | Brand/header lockup, header-spacing fix, and EN/HY/RU translation system with a language selector. |
-| 24.3 hotfix — Parser stabilization | Two-column header merges, section-content bounding (no skills bleed), language levels before/after the name, job-title filtering, and **CV intelligence report localization**. |
+| 24.3 hotfix — Parser stabilization | Two-column header merges, section-content bounding (no skills bleed), language levels before/after the name, job-title filtering, character-spaced PDF repair, name/title/institution skill filtering, and **CV intelligence report localization**. |
+| 24.3C — Multilingual interview foundation | Natural EN/HY/RU interview questions, follow-ups, feedback bands, and recruiter verification guides — deterministic, curated (Armenian-first), no keys required. |
 
 Tagged checkpoints: `mvp-working-v1`, `role-ui-polished-v1`, `interview-engine-v1`,
 and the per-phase tags through `brand-i18n-foundation-v1`.
@@ -39,8 +40,8 @@ and the per-phase tags through `brand-i18n-foundation-v1`.
 
 ## Future production ideas
 
-- **Multilingual interview quality (24.3C)** — natural EN/HY/RU interview questions and feedback (curated-first, optional LLM enhancement, deterministic fallback).
-- **Full UI i18n** — extend EN/HY/RU coverage to the remaining internal panels (interview, quiz, skill-depth, governance, exports).
+- **Multilingual interview enhancement** — optional LLM layer (Gemini-preferred for Armenian) wrapping the deterministic 24.3C localizer; the curated multilingual foundation already works with no keys.
+- **Full UI i18n** — extend EN/HY/RU coverage to the remaining internal panels (quiz, skill-depth, governance, exports) and dynamic interview answer-feedback text.
 - **CV visual/layout analyzer (24.3E, deferred)** — PDF page-count auto-detection, font/heading consistency, two-column risk, and color-coded proficiency — only where the extractor truly exposes it; **no guaranteed font/color analysis yet**.
 - **OCR** for scanned/image PDFs (currently detected and flagged only).
 - **Stronger LLM feedback** layer for interview answers and narratives (optional, behind keys).

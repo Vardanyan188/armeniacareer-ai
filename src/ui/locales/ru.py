@@ -130,4 +130,41 @@ STRINGS = {
     "cv.report.no_issues": (
         "Серьёзных структурных проблем не обнаружено. Прочная основа резюме."
     ),
+
+    # Interview (candidate practice + recruiter verification)
+    "interview.practice_title": "Практика собеседования",
+    "interview.practice_notice": (
+        "Режим практики — приватный, поддерживающий тренинг. Ваши ответы не сохраняются "
+        "и не передаются."
+    ),
+    "interview.question": "Вопрос",
+    "interview.answered": "Отвечено",
+    "interview.avg_score": "Средний балл",
+    "interview.target": "Цель",
+    "interview.session_progress": "Прогресс сессии",
+    "interview.on_track": "Вы на верном пути — средний балл достигает цели.",
+    "interview.keep_going": "Продолжайте — стремитесь поднять средний балл к цели.",
+    "interview.current_question": "Текущий вопрос",
+    "interview.your_answer": "Ваш ответ",
+    "interview.your_answer_prefix": "Ваш ответ",
+    "interview.submit": "Отправить ответ",
+    "interview.skip": "Пропустить вопрос",
+    "interview.end": "Завершить сессию",
+    "interview.write_answer": "Напишите ответ перед отправкой.",
+    "interview.complete": "Сессия практики завершена. Просмотрите отзывы выше.",
+    "interview.avg_answer_score": "Средний балл ответа",
+    "interview.restart": "Начать практику заново",
+    "interview.followup": "Уточняющий вопрос",
+    "interview.verify_title": "Проверочное собеседование",
+    "interview.verify_notice": (
+        "Структурированное, основанное на доказательствах руководство для ручной оценки. "
+        "Только поддержка решений — ответы оценивает рекрутер."
+    ),
+    "interview.no_questions": "Для этого анализа проверочные вопросы не сформированы.",
+    "interview.strong_header": "Сильный ответ должен содержать",
+    "interview.weak_header": "Слабые / неясные ответы могут указывать на",
+    "interview.followups_header": "Рекомендуемые уточняющие вопросы",
+    "interview.must_ask": "Обязательно спросить",
+    "interview.recommended": "Рекомендуется",
+    "interview.optional": "Опционально",
 }

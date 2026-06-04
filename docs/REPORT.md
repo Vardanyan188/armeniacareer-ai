@@ -74,7 +74,7 @@ is presented as an **optional/advanced** component, not the deployed MVP backbon
 
 ## 7. Evaluation methodology and results
 
-Automated: **386 passing tests** plus a parsing-evaluation harness covering
+Automated: **406 passing tests** plus a parsing-evaluation harness covering
 extraction quality, guardrails, security/no-leak, prompt-injection, deterministic
 fallback, ranking, quiz, interview, skill-depth, and JD-versioning. Human
 evaluation is planned (8 demo-safe pairs, 2 reviewers; 5-pair fallback) on

@@ -130,4 +130,40 @@ STRINGS = {
     "cv.report.no_issues": (
         "Կառուցվածքային էական խնդիրներ չեն հայտնաբերվել։ Ամուր CV-ի հիմք։"
     ),
+
+    # Interview (candidate practice + recruiter verification)
+    "interview.practice_title": "Հարցազրույցի պրակտիկա",
+    "interview.practice_notice": (
+        "Պրակտիկայի ռեժիմ — մասնավոր, աջակցող մարզում։ Քո պատասխանները չեն պահվում և չեն կիսվում։"
+    ),
+    "interview.question": "Հարց",
+    "interview.answered": "Պատասխանված",
+    "interview.avg_score": "Միջին գնահատական",
+    "interview.target": "Թիրախ",
+    "interview.session_progress": "Սեսիայի առաջընթաց",
+    "interview.on_track": "Լավ ընթացքի մեջ ես — միջինը համապատասխանում է թիրախին։",
+    "interview.keep_going": "Շարունակի՛ր — ձգտի՛ր բարձրացնել միջինը դեպի թիրախը։",
+    "interview.current_question": "Ընթացիկ հարց",
+    "interview.your_answer": "Քո պատասխանը",
+    "interview.your_answer_prefix": "Քո պատասխանը",
+    "interview.submit": "Ուղարկել պատասխանը",
+    "interview.skip": "Բաց թողնել հարցը",
+    "interview.end": "Ավարտել սեսիան",
+    "interview.write_answer": "Նախքան ուղարկելը գրի՛ր պատասխան։",
+    "interview.complete": "Պրակտիկայի սեսիան ավարտված է։ Վերանայի՛ր վերևի արձագանքը։",
+    "interview.avg_answer_score": "Պատասխանի միջին գնահատական",
+    "interview.restart": "Վերսկսել պրակտիկան",
+    "interview.followup": "Հետևողական հարց",
+    "interview.verify_title": "Ստուգման հարցազրույց",
+    "interview.verify_notice": (
+        "Կառուցվածքային, ապացույցների վրա հիմնված ստուգման ուղեցույց՝ ձեռքով գնահատման համար։ "
+        "Միայն որոշումների աջակցություն — պատասխանները գնահատում է հավաքագրողը։"
+    ),
+    "interview.no_questions": "Այս վերլուծության համար ստուգման հարցեր չեն ստեղծվել։",
+    "interview.strong_header": "Ուժեղ պատասխանը պետք է պարունակի",
+    "interview.weak_header": "Թույլ / անհասկանալի պատասխանները կարող են վկայել",
+    "interview.followups_header": "Առաջարկվող հետևողական հարցեր",
+    "interview.must_ask": "Պարտադիր հարցնել",
+    "interview.recommended": "Խորհուրդ է տրվում",
+    "interview.optional": "Ընտրովի",
 }
