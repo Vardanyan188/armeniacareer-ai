@@ -137,6 +137,59 @@ def test_education_detected_from_content_without_heading(tmp_path):
     assert report.sections_present["education"] is True
 
 
+# ---------------------------------------------------------------------------
+# Phase 24.2 — advisory layer integration
+# ---------------------------------------------------------------------------
+
+_MIXED_SKILLS_CV = """
+PROFILE
+Backend developer.
+
+WORK EXPERIENCE
+Engineer, Company (2019-2023)
+
+EDUCATION
+BSc CS
+
+SKILLS
+Python, SQL, Docker, communication, teamwork, responsibility
+
+LANGUAGES
+English ★★★★☆
+Armenian Native
+"""
+
+
+def test_advisory_skill_organization_and_language_warning(tmp_path):
+    r = analyze_cv_quality(_write(tmp_path, _MIXED_SKILLS_CV, name="cv_mix.txt"))
+    # Hard + soft skills in one section → separation recommendation.
+    assert any("Soft Skills" in x for x in r.skill_organization_recommendations)
+    # Visual-only language level → clarity recommendation.
+    assert any("visual-only" in x.lower() for x in r.language_level_recommendations)
+    # Language levels surfaced (structured), languages not in technical skills.
+    assert r.languages_with_levels
+    low_skills = {s.lower() for s in r.detected_skills}
+    assert "english" not in low_skills and "armenian" not in low_skills
+    # Strengths present for a complete CV.
+    assert r.strengths
+
+
+def test_advisory_page_count_metadata(tmp_path):
+    student_cv = "PROFILE\nComputer science student.\n\nEDUCATION\nBSc 2025\n\nSKILLS\nPython\n"
+    with_pages = analyze_cv_quality(_write(tmp_path, student_cv, name="cv_pg.txt"), page_count=2)
+    assert any("single page" in x.lower() for x in with_pages.improvement_recommendations)
+    # No page metadata → no page advice.
+    without_pages = analyze_cv_quality(_write(tmp_path, student_cv, name="cv_pg2.txt"))
+    assert not any("single page" in x.lower() for x in without_pages.improvement_recommendations)
+
+
+def test_advisory_section_order_experience_above_education(tmp_path):
+    r = analyze_cv_quality(_write(tmp_path, _MIXED_SKILLS_CV, name="cv_order.txt"))
+    # Experience exists and is not a student CV → recommend experience above education?
+    # In this CV experience already precedes education, so NO such recommendation.
+    assert not any("Work Experience above Education" in x for x in r.section_order_recommendations)
+
+
 def test_analyze_cv_quality_detects_multilingual_sections(tmp_path):
     hy_cv = (
         "Ամփոփում\nՓորձառու ծրագրավորող։\n\n"

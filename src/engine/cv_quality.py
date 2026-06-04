@@ -18,14 +18,25 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Union
+from typing import Dict, List, Optional, Union
 
 from src.engine.adapters import MVP_SKILL_ALIASES
+from src.engine.cv_recommendations import (
+    ats_risks,
+    collect_strengths,
+    detect_soft_skills,
+    is_student_or_junior,
+    language_level_recommendations,
+    page_count_recommendations,
+    section_order_recommendations,
+    skill_organization_recommendations,
+)
 from src.guardrails.input_guardrail import mask_pii
 from src.preprocessing.document_loader import load_resume_text
+from src.preprocessing.language_proficiency import parse_languages
 from src.preprocessing.language_utils import detect_languages
 from src.preprocessing.parsing_quality import assess_parsing_quality
-from src.preprocessing.section_detector import detected_section_labels, section_content
+from src.preprocessing.section_detector import detect_sections, detected_section_labels, section_content
 from src.preprocessing.skill_extractor import extract_skill_tokens, merge_skills
 
 PathLike = Union[str, Path]
@@ -86,6 +97,14 @@ class CVQualityReport:
     extraction_quality_band: str = "good"
     is_probably_scanned: bool = False
     extraction_reasons: List[str] = field(default_factory=list)
+    # Advisory layer (Phase 24.2) — all additive, default empty.
+    languages_with_levels: List[dict] = field(default_factory=list)
+    strengths: List[str] = field(default_factory=list)
+    improvement_recommendations: List[str] = field(default_factory=list)
+    ats_risks: List[str] = field(default_factory=list)
+    section_order_recommendations: List[str] = field(default_factory=list)
+    language_level_recommendations: List[str] = field(default_factory=list)
+    skill_organization_recommendations: List[str] = field(default_factory=list)
 
 
 def _detect_skills(low_text: str) -> List[str]:
@@ -180,8 +199,13 @@ def _improvements(
     return tips
 
 
-def analyze_cv_quality(cv_path: PathLike) -> CVQualityReport:
-    """Deterministic CV-only quality analysis. No JD, no LLM, no orchestrator."""
+def analyze_cv_quality(cv_path: PathLike, page_count: Optional[int] = None) -> CVQualityReport:
+    """
+    Deterministic CV-only quality analysis. No JD, no LLM, no orchestrator.
+
+    `page_count` is optional layout metadata; when provided, page-density advice
+    is added. When None it is never guessed.
+    """
     text = load_resume_text(cv_path)
     low_text = text.lower()
     source_ext = Path(cv_path).suffix
@@ -233,6 +257,36 @@ def analyze_cv_quality(cv_path: PathLike) -> CVQualityReport:
     ]
     quality_score = round(sum(1 for s in signals if s) / len(signals), 3)
 
+    # ── Advisory layer (Phase 24.2) — additive, deterministic, no PII ──────────
+    detection = detect_sections(text)
+    ordered_labels = [
+        lbl for lbl, _ in sorted(detection.sections.items(), key=lambda kv: kv[1].line_index)
+    ]
+    has_experience = sections.get("experience", False)
+    student = is_student_or_junior(low_text, has_experience)
+
+    profs = parse_languages("\n".join(section_content(text, "languages")) or text)
+    soft_in_skills = detect_soft_skills("\n".join(section_content(text, "skills")))
+    is_technical = len(skills) >= 1
+
+    section_recs = section_order_recommendations(
+        ordered_labels, has_experience=has_experience, is_student=student,
+    )
+    skill_org_recs = skill_organization_recommendations(
+        skills, soft_in_skills, is_technical_role=is_technical,
+    )
+    lang_recs = language_level_recommendations(profs)
+    page_recs = page_count_recommendations(page_count, is_student=student)
+    risks = ats_risks(text, sections)
+    strengths = collect_strengths(
+        contact_present=contact_present, sections_present=sections,
+        skill_count=len(skills), has_metric=has_metric, languages=languages,
+    )
+
+    improvement_recommendations = (
+        improvements + section_recs + skill_org_recs + lang_recs + page_recs
+    )
+
     return CVQualityReport(
         detected_skills=skills,
         skill_count=len(skills),
@@ -247,4 +301,11 @@ def analyze_cv_quality(cv_path: PathLike) -> CVQualityReport:
         extraction_quality_band=quality.extraction_quality_band,
         is_probably_scanned=quality.is_probably_scanned,
         extraction_reasons=quality.reasons,
+        languages_with_levels=[p.to_dict() for p in profs],
+        strengths=strengths,
+        improvement_recommendations=improvement_recommendations,
+        ats_risks=risks,
+        section_order_recommendations=section_recs,
+        language_level_recommendations=lang_recs,
+        skill_organization_recommendations=skill_org_recs,
     )
