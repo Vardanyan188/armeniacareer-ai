@@ -133,3 +133,26 @@ built into the code."*
 - One clean text-based CV and one short JD in a notepad.
 - 2–3 CVs to show bulk ranking and pool dedup.
 - Two JD versions (e.g. before/after adding deployment requirements) for the diff.
+
+## Final manual demo checklist (presentation)
+
+A short, in-order checklist for the live walkthrough:
+
+1. **Open the public demo** — header/brand lockup renders, no import error, no
+   Streamlit deprecation warning in the console.
+2. **Show safe demo mode** — Admin / Private Ingest hidden; no debug diagnostics;
+   running deterministically with no API keys (`ACAI_PUBLIC_DEMO=1`).
+3. **Switch language** — EN → Հայերեն → Русский; brand tagline, mode header, and
+   the CV intelligence report localize.
+4. **Upload a Canva-style CV** — show the CV quality band, **clean detected skills**
+   (no names/job-titles), and the localized **Layout & readability** advisory.
+5. **Compare CV with JD** — paste a short JD → composite score card + 7 dimensions.
+6. **Interview practice** — a weak answer triggers an adaptive follow-up; a strong
+   answer advances (Armenian-first, no keys).
+7. **Rubric answer evaluation** — open "Answer evaluation": eight dimensions +
+   confidence band + localized strengths/improvements/learning focus.
+8. **(If time) Recruiter verification** — switch to Recruiter / HR, show bulk
+   ranking and the Verification Interview's "Evidence confidence & what to verify".
+9. **Explain public vs local/internal** — the public demo is locked down and
+   deterministic; the local/internal build adds Admin, Private Ingest, Candidate
+   Pool, debug diagnostics, and optional LLM enhancement behind keys.

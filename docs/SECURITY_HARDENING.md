@@ -83,3 +83,24 @@ git ls-files | grep -E "\.env$|ingest_manifest\.json|audit_logs/" ; echo "(expec
 - No `.env`, no API keys committed.
 - For a **public** deploy, ship only demo-safe `data/raw` (generated/public) and
   set `ACAI_PUBLIC_DEMO=1` (or `APP_ENV=prod`).
+
+## 8. Public demo deploy config (copy-paste)
+
+The canonical environment for a public/professor-facing demo. Every gate is locked
+down and the app runs the deterministic path (no API keys required):
+
+```bash
+APP_ENV=demo
+ACAI_PUBLIC_DEMO=1
+ACAI_ENABLE_ADMIN=0
+ACAI_ENABLE_INGEST=0
+ACAI_ENABLE_CANDIDATE_POOL=0
+ACAI_ENABLE_AUDIT_LOG=0
+ACAI_DEBUG=0
+# No OPENAI_API_KEY / GOOGLE_API_KEY → deterministic fallback (intended for the demo).
+```
+
+With this config the Admin/Demo workspace, Private Ingest, Candidate-Pool
+persistence, raw debug diagnostics, and audit logs are all **off** — verified by
+`tests/test_deployment_gates.py`. Layout/CV advisories
+remain visible (they are safe), but raw parse diagnostics stay hidden.
