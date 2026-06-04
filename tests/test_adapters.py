@@ -349,3 +349,41 @@ def test_jd_explicit_seniority_only_on_label():
         "raw_text": "We work with senior stakeholders. Requirements: Python.",
     })
     assert jd.required_seniority != SeniorityLevel.SENIOR
+
+
+# ---------------------------------------------------------------------------
+# Phase 24.1 — Armenian JD parsing (open-vocab, required vs preferred, seniority)
+# ---------------------------------------------------------------------------
+
+_ARM_JD = {
+    "role_title": "Ծրագրավորող",
+    "raw_text": (
+        "Աշխատանքի նկարագրություն\n"
+        "Միացիր մեր թիմին և մշակիր տվյալների գործիքներ։\n"
+        "Պարտականություններ\n"
+        "- Մշակել ծառայություններ Python-ով\n"
+        "Անհրաժեշտ հմտություններ\n"
+        "Python, SQL, Power BI\n"
+        "Ցանկալի հմտություններ\n"
+        "Jira\n"
+        "Մակարդակ: Middle\n"
+    ),
+}
+
+
+def test_armenian_jd_required_and_preferred_skills():
+    jd = jd_json_to_jd_entities(_ARM_JD)
+    req = {s.canonical_name for s in jd.required_skills}
+    pref = {s.canonical_name for s in jd.preferred_skills}
+    assert {"Python", "SQL", "Power BI"} <= req
+    assert "Jira" in pref
+    assert "Jira" not in req            # preferred not overclaimed as required
+
+
+def test_armenian_jd_responsibilities_and_seniority():
+    jd = jd_json_to_jd_entities(_ARM_JD)
+    assert jd.responsibilities                     # Armenian responsibilities captured
+    assert jd.required_seniority == SeniorityLevel.MID  # "Մակարդակ: Middle"
+    # "middle" must not have leaked into skills.
+    assert "middle" not in {s.canonical_name.lower() for s in jd.required_skills}
+    assert "middle" not in {s.canonical_name.lower() for s in jd.preferred_skills}

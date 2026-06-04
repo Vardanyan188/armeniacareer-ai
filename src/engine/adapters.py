@@ -23,6 +23,7 @@ from __future__ import annotations
 import re
 from typing import Any, List, Optional, Union
 
+from src.preprocessing.skill_extractor import extract_skill_tokens
 from src.schemas.canonical_payload import (
     CVEntities,
     EducationEntry,
@@ -251,7 +252,8 @@ _PREFERRED_INDICATORS = [
 _RESP_HEADER_KW = [
     "responsibilit", "duties", "what you will", "you will", "job description",
     "role overview", "overview", "about the role", "the role", "what you'll do",
-    "պարտականություն", "обязанности", "задачи",
+    "աշխատանքի նկարագրություն", "նկարագրություն", "պարտականություն",
+    "обязанности", "задачи", "описание",
 ]
 _QUAL_HEADER_KW = [
     "requirement", "qualification", "necessary skills", "required skills",
@@ -259,28 +261,92 @@ _QUAL_HEADER_KW = [
     "desired skills", "key skills", "must have", "must-have", "skills",
     "what we expect", "we expect", "professional skills", "experience", "seniority",
     "level",
-    "անհրաժեշտ", "պահանջ", "հմտություն", "требовани", "квалификаци", "навыки",
+    "անհրաժեշտ", "պահանջ", "հմտություն", "ցանկալի", "որակավորում", "մակարդակ",
+    "требовани", "квалификаци", "навыки", "желательн", "уровень",
 ]
 
-# Explicit "Seniority: X" / "Level: X" label tokens → canonical level.
+# ── Open-vocabulary JD skill extraction (section-scoped required vs preferred) ─
+_JD_PREFERRED_HDR = ["preferred", "nice to have", "nice-to-have", "desired", "ցանկալի", "желательн"]
+_JD_REQUIRED_HDR = [
+    "required skills", "requirement", "technical skills", "necessary skills",
+    "key skills", "must have", "must-have", "tools", "technolog",
+    "անհրաժեշտ", "պահանջ", "տեխնիկական",
+    "требовани", "технически", "обязательн",
+]
+_JD_OTHER_HDR = [
+    "responsibilit", "duties", "overview", "about", "education", "summary",
+    "job description", "seniority", "level", "experience",
+    "նկարագր", "պարտականություն", "մակարդակ", "обязанности", "описание", "уровень",
+]
+
+
+def _looks_like_header(line: str) -> bool:
+    return line.endswith(":") or line.endswith("：") or len(line) <= _HEADER_MAX_HDR_LEN
+
+
+_HEADER_MAX_HDR_LEN = 48
+
+
+def _jd_header_bucket(low_line: str) -> Optional[str]:
+    """Classifies a header line as 'preferred' | 'required' | 'other' | None."""
+    if any(k in low_line for k in _JD_PREFERRED_HDR):
+        return "preferred"
+    if any(k in low_line for k in _JD_REQUIRED_HDR):
+        return "required"
+    if any(k in low_line for k in _JD_OTHER_HDR):
+        return "other"
+    return None
+
+
+def _jd_section_skills(raw_text: str) -> tuple[List[str], List[str]]:
+    """
+    Section-scoped open-vocabulary skills: tokens under required/preferred headers
+    (and the inline tail on the header line). Returns (required_names, preferred_names).
+    """
+    required: List[str] = []
+    preferred: List[str] = []
+    bucket: Optional[str] = None
+    for raw in raw_text.splitlines():
+        line = raw.strip()
+        if not line:
+            continue
+        if _looks_like_header(line):
+            kind = _jd_header_bucket(line.lower())
+            if kind is not None:
+                bucket = None if kind == "other" else kind
+                if kind in ("required", "preferred") and (":" in line or "：" in line):
+                    tail = re.split(r"[:：]", line, 1)[1].strip()
+                    target = required if kind == "required" else preferred
+                    target.extend(extract_skill_tokens(tail))
+                continue
+        if bucket == "required":
+            required.extend(extract_skill_tokens(line))
+        elif bucket == "preferred":
+            preferred.extend(extract_skill_tokens(line))
+    return required, preferred
+
+# Explicit "Seniority: X" / "Level: X" label tokens → canonical level (EN/HY/RU).
 _EXPLICIT_SENIORITY_TOKENS = [
     (SeniorityLevel.EXECUTIVE, ["executive", "c-level", "head of", "director", "vp"]),
     (SeniorityLevel.PRINCIPAL, ["principal"]),
-    (SeniorityLevel.LEAD, ["lead", "team lead", "tech lead"]),
-    (SeniorityLevel.SENIOR, ["senior", "sr."]),
-    (SeniorityLevel.MID, ["mid-level", "mid level", "middle", "intermediate"]),
-    (SeniorityLevel.JUNIOR, ["junior", "jr.", "entry-level", "entry level"]),
-    (SeniorityLevel.INTERN, ["intern", "internship", "trainee"]),
+    (SeniorityLevel.LEAD, ["lead", "team lead", "tech lead", "ведущий"]),
+    (SeniorityLevel.SENIOR, ["senior", "sr.", "ավագ", "старший"]),
+    (SeniorityLevel.MID, ["mid-level", "mid level", "middle", "intermediate", "միջին", "средний"]),
+    (SeniorityLevel.JUNIOR, ["junior", "jr.", "entry-level", "entry level", "կրտսեր", "младший"]),
+    (SeniorityLevel.INTERN, ["intern", "internship", "trainee", "պրակտիկանտ", "стажёр", "стажер"]),
 ]
 
 
 def _detect_explicit_seniority(raw_text: str) -> Optional[SeniorityLevel]:
     """
-    Returns a seniority level ONLY when the JD has an explicit 'Seniority:' or
-    'Level:' labelled line (precise; avoids reclassifying JDs that merely mention
-    a level word in prose, so existing scores are unaffected).
+    Returns a seniority level ONLY when the JD has an explicit 'Seniority:'/'Level:'
+    (or HY 'Մակարդակ' / RU 'Уровень') labelled line — precise, so JDs that merely
+    mention a level word in prose are not reclassified and existing scores hold.
     """
-    match = re.search(r"(?:^|\n)\s*(?:seniority|level)\s*[:\-]\s*([^\n]+)", raw_text.lower())
+    match = re.search(
+        r"(?:^|\n)\s*(?:seniority|level|մակարդակ|уровень)\s*[:\-：]\s*([^\n]+)",
+        raw_text.lower(),
+    )
     if not match:
         return None
     scope = match.group(1)
@@ -440,6 +506,24 @@ def jd_json_to_jd_entities(jd: dict) -> JDEntities:
 
     responsibilities, qualifications = _extract_sections(raw_text)
     required_skills, preferred_skills = _extract_skills(raw_text)
+
+    # Open-vocabulary, section-scoped skills (captures unknown tools like Jira,
+    # Notion). Preferred-section skills stay preferred; required stay required.
+    ov_required, ov_preferred = _jd_section_skills(raw_text)
+    _req_seen = {s.canonical_name.lower() for s in required_skills}
+    _pref_seen = {s.canonical_name.lower() for s in preferred_skills}
+    for name in ov_preferred:
+        key = name.lower()
+        if key not in _req_seen and key not in _pref_seen:
+            preferred_skills.append(SkillEntry(
+                raw_name=name, canonical_name=name, category=SkillCategory.TECHNICAL))
+            _pref_seen.add(key)
+    for name in ov_required:
+        key = name.lower()
+        if key not in _req_seen and key not in _pref_seen:
+            required_skills.append(SkillEntry(
+                raw_name=name, canonical_name=name, category=SkillCategory.TECHNICAL))
+            _req_seen.add(key)
 
     # Fold the stated education level into the qualifications list, deterministically.
     edu_level = jd.get("required_education_level")

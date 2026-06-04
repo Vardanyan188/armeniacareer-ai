@@ -10,6 +10,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
@@ -20,43 +21,47 @@ SECTION_ALIASES: Dict[str, List[str]] = {
     "summary": [
         "summary", "professional summary", "profile", "professional profile", "objective",
         "career objective", "about", "about me",
-        "ամփոփում", "իմ մասին", "ինձ մասին", "նպատակ",
+        "ամփոփում", "ամփոփագիր", "մասնագիտական ամփոփագիր", "իմ մասին", "ինձ մասին",
+        "անձնական նկարագիր", "նպատակ",
         "резюме", "краткое резюме", "о себе", "цель", "профиль",
     ],
     "contact": [
         "contact", "contacts", "contact me", "contact info", "contact information",
         "contact details", "personal information", "personal details",
         "կոնտակտ", "կոնտակտներ", "կապ", "կոնտակտային տվյալներ", "անձնական տվյալներ",
-        "контакты", "контактная информация", "личная информация",
+        "контакты", "контактная информация", "личная информация", "личные данные",
     ],
     "experience": [
         "work experience", "experience", "professional experience", "employment",
         "employment history", "work history", "career", "career history",
         "volunteer experience", "volunteering", "internship", "internships",
-        "project experience", "project work", "relevant experience",
+        "project experience", "project work", "relevant experience", "projects",
         "աշխատանքային փորձ", "փորձ", "մասնագիտական փորձ", "աշխատանքային գործունեություն",
-        "կամավորական փորձ", "պրակտիկա",
+        "կամավորական փորձ", "պրակտիկա", "նախագծեր",
         "опыт работы", "опыт", "профессиональный опыт", "трудовая деятельность", "стаж",
+        "стажировка", "проекты", "волонтерский опыт",
     ],
     "education": [
         "education", "academic background", "qualifications", "academic qualifications",
         "qualification", "degree", "degrees", "academic",
         "կրթություն", "ակադեմիական կրթություն", "ուսում", "որակավորում",
-        "образование", "учёба", "учеба", "академическое образование",
+        "образование", "учёба", "учеба", "академическое образование", "квалификация",
     ],
     "skills": [
         "skills", "technical skills", "computer skills", "digital skills",
         "programming skills", "core competencies", "competencies", "expertise",
         "tech stack", "technologies", "tools", "tools and technologies",
         "հմտություններ", "տեխնիկական հմտություններ", "համակարգչային հմտություններ",
-        "կարողություններ", "մասնագիտական հմտություններ",
+        "կարողություններ", "մասնագիտական հմտություններ", "ծրագրերի իմացություն",
+        "գործիքներ", "տեխնոլոգիաներ",
         "навыки", "технические навыки", "компьютерные навыки", "компетенции",
-        "умения", "ключевые навыки",
+        "умения", "ключевые навыки", "владение программами", "инструменты",
+        "технологии",
     ],
     "languages": [
         "language", "languages", "language skills", "language proficiency",
         "լեզու", "լեզուներ", "լեզվի իմացություն", "լեզուների իմացություն",
-        "язык", "языки", "знание языков", "иностранные языки",
+        "язык", "языки", "знание языков", "иностранные языки", "владение языками",
     ],
     "certifications": [
         "certifications", "certification", "certificates", "certificate", "licenses",
@@ -166,3 +171,35 @@ def detect_sections(text: str) -> SectionDetectionResult:
 def detected_section_labels(text: str) -> List[str]:
     """Convenience: sorted list of detected canonical section labels."""
     return detect_sections(text).present_labels
+
+
+def section_content(text: str, label: str) -> List[str]:
+    """
+    Returns the non-empty content lines belonging to `label`'s section — the
+    lines between its header and the next detected section header — plus any
+    inline tail on the header line after a ':' (e.g. "Skills: Python, SQL").
+    Returns [] if the section is not detected.
+    """
+    res = detect_sections(text)
+    if label not in res.sections:
+        return []
+    lines = normalize_text(text).split("\n")
+    start = res.sections[label].line_index
+    header_indices = sorted(s.line_index for s in res.sections.values())
+    end = len(lines)
+    for idx in header_indices:
+        if idx > start:
+            end = idx
+            break
+
+    content: List[str] = []
+    header_line = lines[start] if 0 <= start < len(lines) else ""
+    if ":" in header_line or "：" in header_line:
+        tail = re.split(r"[:：]", header_line, 1)[1].strip()
+        if tail:
+            content.append(tail)
+    for raw in lines[start + 1:end]:
+        stripped = raw.strip()
+        if stripped:
+            content.append(stripped)
+    return content

@@ -25,7 +25,8 @@ from src.guardrails.input_guardrail import mask_pii
 from src.preprocessing.document_loader import load_resume_text
 from src.preprocessing.language_utils import detect_languages
 from src.preprocessing.parsing_quality import assess_parsing_quality
-from src.preprocessing.section_detector import detected_section_labels
+from src.preprocessing.section_detector import detected_section_labels, section_content
+from src.preprocessing.skill_extractor import extract_skill_tokens, merge_skills
 
 PathLike = Union[str, Path]
 
@@ -111,11 +112,17 @@ def _detect_languages(low_text: str) -> List[str]:
 _EDU_CONTENT_CUES = [
     "university", "bachelor", "master", "faculty", "diploma", "phd", "b.sc", "m.sc",
     "b.s.", "m.s.", "institute", "college", "high school", "gpa", "degree",
+    # Armenian / Russian
+    "համալսարան", "բակալավր", "մագիստրոս", "ֆակուլտետ", "դպրոց",
+    "университет", "бакалавр", "магистр", "факультет", "институт", "колледж",
 ]
 _EXP_ROLE_CUES = [
     "intern", "internship", "engineer", "developer", "analyst", "manager",
     "team lead", "tech lead", "consultant", "specialist", "designer", "company",
     "ltd", "llc",
+    # Armenian / Russian
+    "ընկերություն", "պրակտիկա", "մասնագետ", "ծրագրավորող", "մենեջեր",
+    "компания", "стажировка", "инженер", "разработчик", "специалист", "менеджер",
 ]
 _YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
 
@@ -187,7 +194,11 @@ def analyze_cv_quality(cv_path: PathLike) -> CVQualityReport:
     contact_present = any(f in pii_fields for f in ("email", "phone")) or \
         any(kw in low_text for kw in ("email", "e-mail", "phone", "հեռախոս", "эл. почта"))
 
-    skills = _detect_skills(low_text)
+    curated_skills = _detect_skills(low_text)
+    # Open-vocabulary skills: extracted ONLY from a detected skills section, so
+    # unknown tools are captured while summary/profile prose is never mined.
+    open_vocab = extract_skill_tokens("\n".join(section_content(text, "skills")))
+    skills = merge_skills(curated_skills, open_vocab)
     # Robust multilingual section detection (canonical labels → tracked subset),
     # then augment from content cues so unusual headings / two-column layouts
     # don't produce false "missing section" results.
