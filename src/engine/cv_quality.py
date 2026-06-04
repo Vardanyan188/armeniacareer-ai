@@ -97,6 +97,8 @@ class CVQualityReport:
     extraction_quality_band: str = "good"
     is_probably_scanned: bool = False
     extraction_reasons: List[str] = field(default_factory=list)
+    # Safe runtime diagnostics (Phase 24.3 hotfix) — metadata only, no CV text.
+    diagnostics: Dict[str, object] = field(default_factory=dict)
     # Advisory layer (Phase 24.2) — all additive, default empty.
     languages_with_levels: List[dict] = field(default_factory=list)
     strengths: List[str] = field(default_factory=list)
@@ -199,6 +201,34 @@ def _improvements(
     return tips
 
 
+def _single_char_ratio(text: str) -> float:
+    tokens = text.split()
+    if not tokens:
+        return 0.0
+    singles = sum(1 for tok in tokens if len(tok) == 1 and tok.isalpha())
+    return singles / len(tokens)
+
+
+def repair_spacing(text: str) -> str:
+    """
+    Repairs character-spaced PDF extraction (a common pypdf failure on some CVs),
+    e.g. 'C O M P U T E R   S K I L L S' / 'P y t h o n'. Words are separated by
+    runs of 2+ spaces, letters within a word by single spaces — so we collapse
+    single spaces inside each 2+-space-delimited chunk. No-op on normal text.
+    """
+    if _single_char_ratio(text) < 0.40 or len(text.split()) < 30:
+        return text
+    out_lines: List[str] = []
+    for line in text.split("\n"):
+        if not line.strip():
+            out_lines.append("")
+            continue
+        chunks = re.split(r" {2,}", line.strip())
+        words = [re.sub(r"\s+", "", chunk) for chunk in chunks]
+        out_lines.append(" ".join(w for w in words if w))
+    return "\n".join(out_lines)
+
+
 def analyze_cv_quality(cv_path: PathLike, page_count: Optional[int] = None) -> CVQualityReport:
     """
     Deterministic CV-only quality analysis. No JD, no LLM, no orchestrator.
@@ -206,7 +236,10 @@ def analyze_cv_quality(cv_path: PathLike, page_count: Optional[int] = None) -> C
     `page_count` is optional layout metadata; when provided, page-density advice
     is added. When None it is never guessed.
     """
-    text = load_resume_text(cv_path)
+    raw_text = load_resume_text(cv_path)
+    # Repair character-spaced extraction before any detection runs.
+    text = repair_spacing(raw_text)
+    spacing_repaired = text != raw_text
     low_text = text.lower()
     source_ext = Path(cv_path).suffix
 
@@ -287,6 +320,21 @@ def analyze_cv_quality(cv_path: PathLike, page_count: Optional[int] = None) -> C
         improvements + section_recs + skill_org_recs + lang_recs + page_recs
     )
 
+    # Safe diagnostics (metadata only; no raw CV text, no PII).
+    diagnostics = {
+        "analyzer": "analyze_cv_quality",
+        "source_ext": source_ext,
+        "raw_word_count": len(raw_text.split()),
+        "repaired_word_count": word_count,
+        "raw_line_count": raw_text.count("\n") + 1,
+        "single_char_ratio_raw": round(_single_char_ratio(raw_text), 3),
+        "spacing_repaired": spacing_repaired,
+        "detected_section_labels": sorted(detected_labels),  # generic labels only
+        "languages_count": len(languages),
+        "language_levels": [d.get("normalized_level") for d in
+                            [p.to_dict() for p in profs]],
+    }
+
     return CVQualityReport(
         detected_skills=skills,
         skill_count=len(skills),
@@ -301,6 +349,7 @@ def analyze_cv_quality(cv_path: PathLike, page_count: Optional[int] = None) -> C
         extraction_quality_band=quality.extraction_quality_band,
         is_probably_scanned=quality.is_probably_scanned,
         extraction_reasons=quality.reasons,
+        diagnostics=diagnostics,
         languages_with_levels=[p.to_dict() for p in profs],
         strengths=strengths,
         improvement_recommendations=improvement_recommendations,

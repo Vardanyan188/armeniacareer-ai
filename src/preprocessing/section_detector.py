@@ -114,58 +114,92 @@ def _match_alias_exact(candidate: str) -> Optional[str]:
     return _ALIAS_TO_LABEL.get(candidate)
 
 
+def _match_header_label(raw_line: str) -> Optional[str]:
+    """
+    Returns the canonical label if `raw_line` is a section header, else None.
+    Combines anchored exact-alias matching with a 'starts-with alias' fallback
+    (e.g. "Skills: Python, SQL"). Used for both detection and content bounding.
+    """
+    line = (raw_line or "").strip()
+    if not line:
+        return None
+    candidate = _normalize_header_candidate(line)
+    if not candidate:
+        return None
+    looks_like_header = line.endswith(":") or line.endswith("：") or len(line) <= _HEADER_MAX_LEN
+    if looks_like_header:
+        label = _match_alias_exact(candidate)
+        if label:
+            return label
+    low_full = line.lower().lstrip(_BULLET_PREFIX).strip()
+    for alias in _ALIASES_BY_LEN:
+        if candidate == alias or low_full.startswith(alias + ":") or low_full.startswith(alias + " "):
+            return _ALIAS_TO_LABEL[alias]
+    return None
+
+
+def _uppercase_ratio(line: str) -> float:
+    letters = [c for c in line if c.isalpha()]
+    if not letters:
+        return 0.0
+    return sum(1 for c in letters if c.isupper()) / len(letters)
+
+
+def _multi_header_labels(line: str) -> List[str]:
+    """
+    For an ALL-CAPS-ish header-like line (common when two-column PDFs merge two
+    headers onto one extracted line, e.g. 'PROFILE EDUCATION'), returns every
+    section alias present as a whole token.
+    """
+    if not line or len(line) > 60 or _uppercase_ratio(line) < 0.6:
+        return []
+    padded = " " + line.lower().strip() + " "
+    found: List[str] = []
+    for alias in _ALIASES_BY_LEN:
+        label = _ALIAS_TO_LABEL[alias]
+        if label not in found and (" " + alias + " ") in padded:
+            found.append(label)
+    return found
+
+
 def detect_sections(text: str) -> SectionDetectionResult:
     """
-    Detects CV sections in `text`. Returns a SectionDetectionResult mapping each
-    detected canonical label to the header line that introduced it (first hit).
-
-    Two-pass strategy:
-      1. Anchored headers: a short or colon-terminated line whose normalized form
-         exactly equals a known alias.
-      2. Soft fallback: for labels still missing, a line that *starts with* a
-         known alias (e.g. "Skills: Python, SQL") counts as present.
+    Detects CV sections in `text`. Robust to non-standard headings, colon/bullet
+    prefixes, and two-column PDF merges that glue two headers onto one line.
     """
     result = SectionDetectionResult()
-    norm = normalize_text(text)
-    lines = norm.split("\n")
+    lines = normalize_text(text).split("\n")
 
-    # Pass 1 — anchored exact header match.
+    # Pass 1 — single-header lines (exact or starts-with alias).
     for idx, raw_line in enumerate(lines):
-        line = raw_line.strip()
-        if not line:
-            continue
-        looks_like_header = line.endswith(":") or line.endswith("：") or len(line) <= _HEADER_MAX_LEN
-        if not looks_like_header:
-            continue
-        candidate = _normalize_header_candidate(line)
-        if not candidate:
-            continue
-        label = _match_alias_exact(candidate)
+        label = _match_header_label(raw_line)
         if label and label not in result.sections:
             result.sections[label] = DetectedSection(
-                label=label, header_text=line, line_index=idx,
+                label=label, header_text=raw_line.strip(), line_index=idx,
             )
 
-    # Pass 2 — soft "starts-with alias" fallback for still-missing labels.
+    # Pass 2 — two-column merged headers on a single ALL-CAPS line.
     for idx, raw_line in enumerate(lines):
         line = raw_line.strip()
         if not line:
             continue
-        low = _normalize_header_candidate(line)
-        # Use the raw lowercased line for prefix checks (keeps "skills:" prefix).
-        low_full = line.lower().lstrip(_BULLET_PREFIX).strip()
-        for alias in _ALIASES_BY_LEN:
-            label = _ALIAS_TO_LABEL[alias]
-            if label in result.sections:
-                continue
-            if low == alias or low_full.startswith(alias + ":") or low_full.startswith(alias + " "):
+        for label in _multi_header_labels(line):
+            if label not in result.sections:
                 result.sections[label] = DetectedSection(
                     label=label, header_text=line, line_index=idx,
                 )
-                break
 
     result.present_labels = sorted(result.sections.keys())
     return result
+
+
+def _all_header_indices(lines: List[str]) -> List[int]:
+    """Indices of EVERY header-like line (including repeated section labels)."""
+    out: List[int] = []
+    for idx, raw in enumerate(lines):
+        if _match_header_label(raw) is not None or _multi_header_labels(raw.strip()):
+            out.append(idx)
+    return out
 
 
 def detected_section_labels(text: str) -> List[str]:
@@ -185,7 +219,10 @@ def section_content(text: str, label: str) -> List[str]:
         return []
     lines = normalize_text(text).split("\n")
     start = res.sections[label].line_index
-    header_indices = sorted(s.line_index for s in res.sections.values())
+    # Bound at the next HEADER-LIKE line (re-scanned), so a repeated section
+    # label later in the CV (e.g. a second 'WORK EXPERIENCE') still ends this
+    # block and skills don't bleed into the next section.
+    header_indices = _all_header_indices(lines)
     end = len(lines)
     for idx in header_indices:
         if idx > start:

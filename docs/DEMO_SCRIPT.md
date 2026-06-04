@@ -15,9 +15,29 @@ so the demo works **with or without API keys**.
 streamlit run streamlit_app.py
 ```
 
-Point out: the **dark premium theme**, the **sidebar workspace switcher** with a
+Point out: the **dark premium theme**, the refreshed **brand lockup** (logo mark +
+full "ArmeniaCareer AI" wordmark), the **sidebar workspace switcher** with a
 contextual "How it works" list, the **status bar** (provider / data-safety / ingest)
 with the **Focus mode** toggle, and the responsible-AI footer.
+
+### Language check (EN / Հայերեն / Русский)
+
+In the sidebar, switch the **Language** selector between English, Հայերեն, and
+Русский. Confirm the brand tagline, workspace labels, steppers, trust chips, mode
+header, empty states, and the **CV intelligence report** all update to the chosen
+language. *Say:* "The interface is multilingual; Armenian is first-class because
+real interviews here are often Armenian-speaking."
+
+### Real-CV parsing check
+
+Upload a realistic, non-standard CV (e.g. a two-column layout with headings like
+`PROFILE`, `CONTACT ME`, `COMPUTER SKILLS`, `LANGUAGE`, `WORK EXPERIENCE`).
+Confirm the report detects **Summary, Contact, Education, Work Experience, Skills**,
+extracts tools (incl. slash-separated lists like `HTML/CSS/JavaScript`), reads
+**language levels** (e.g. *Armenian — Native, English — Advanced*), and does **not**
+turn job titles (e.g. *Software Engineer*) into skills. The quality score should
+reflect a mostly-parseable CV, not a false-low. *Say:* "Robust parsing was
+hardened through iterative development, regression testing, and human review."
 
 ## 1. Candidate Mode
 

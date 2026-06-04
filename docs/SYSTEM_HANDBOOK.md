@@ -471,6 +471,32 @@ Deterministic-first, defense-in-depth. Full detail in
 
 ---
 
+## 15f. Brand, i18n & Parser Robustness (Phase 24.3)
+
+- **Brand/header (24.3A):** a proper brand lockup (inline-SVG mark + full
+  "ArmeniaCareer AI" wordmark + tagline) in the sidebar and a clean main header
+  band, plus a top-padding fix so content never tucks under the top bar. CSS/HTML
+  only — `ui_kit.brand_mark_svg` / `brand_lockup_html` / `app_header_html`.
+- **i18n foundation (24.3B):** a central translation registry
+  (`src/ui/i18n.py` + `src/ui/locales/{en,hy,ru}.py`) with `t()`/`tlist()`,
+  English fallback, and a never-empty result. A **Language selector** (EN /
+  Հայերеն / Русский) writes `session_state["ui_lang"]` (default English).
+  Localized today: sidebar, header, mode names/intros, hero panels, steppers,
+  trust/status chips, utility-bar controls, key Candidate/Recruiter/Admin labels,
+  and the full **CV intelligence report**. Internal panels (interview, quiz,
+  skill-depth, governance, export Markdown) remain English for now.
+- **Parser stabilization (24.3 hotfix):** robust to real-world extraction —
+  two-column PDF header merges (multi-alias ALL-CAPS header pass), section-content
+  bounding so a skills block never bleeds into a later section, language
+  proficiency levels written **before or after** the language name, and job-title
+  words excluded from technical skills. Verified with regression tests over the
+  real-CV template and a simulated two-column extraction. **No OCR**, and **no
+  guaranteed font/color/visual-layout analysis yet** (deferred to 24.3E).
+- **Safety:** public-demo behavior is unchanged — the selector is presentational,
+  no provider/API logic changed, gates still default off, deterministic offline.
+
+---
+
 ## 16. Privacy and Governance
 
 - **No automatic hiring decision** — decision-support only; human review required.

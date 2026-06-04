@@ -100,41 +100,49 @@ def parse_language_line(line: str) -> Optional[LanguageProficiency]:
         return None
     low = line.lower()
     name = None
-    name_pos = -1
+    name_start = -1
+    name_end = -1
     for token in _NAMES_BY_LEN:
         pos = low.find(token)
         if pos != -1:
             name = _LANGUAGE_NAMES[token]
-            name_pos = pos + len(token)
+            name_start = pos
+            name_end = pos + len(token)
             break
     if name is None:
         return None
 
-    raw_level = line[name_pos:].strip(" :：-–—\t").strip()
-    level_text = raw_level.lower()
+    # The level may appear AFTER ("English B2") or BEFORE ("Native Armenian")
+    # the language name. Scan both segments.
+    after = line[name_end:].strip(" :：-–—\t").strip()
+    before = line[:name_start].strip(" :：-–—\t").strip()
+    raw_level = after or before
+    line_low = line.lower()
 
-    # 1) CEFR (highest confidence).
-    cefr = re.search(r"\b([abc][12])\b", level_text)
+    # 1) CEFR (highest confidence) — anywhere on the line.
+    cefr = re.search(r"\b([abc][12])\b", line_low)
     if cefr:
         return LanguageProficiency(name, raw_level or cefr.group(1).upper(),
                                    _CEFR_MAP[cefr.group(1)], "high", False)
 
-    # 2) Word level (scan only the text after the language name).
+    # 2) Word level — anywhere on the line (before or after the name).
     for label, cues in _WORD_LEVELS:
-        if any(cue in level_text for cue in cues):
+        if any(cue in line_low for cue in cues):
             return LanguageProficiency(name, raw_level or label, label, "high", False)
 
     # 3) Numeric N/M (visual-only style).
-    numeric = re.search(r"(\d+)\s*/\s*(\d+)", raw_level)
+    numeric = re.search(r"(\d+)\s*/\s*(\d+)", line)
     if numeric:
         n, m = int(numeric.group(1)), int(numeric.group(2))
         if m > 0:
-            return LanguageProficiency(name, raw_level, _ratio_to_level(n / m), "medium", True)
+            return LanguageProficiency(name, raw_level or numeric.group(0),
+                                       _ratio_to_level(n / m), "medium", True)
 
     # 4) Visual symbols (stars/dots/bars).
-    ratio = _visual_ratio(raw_level)
+    ratio = _visual_ratio(line)
     if ratio is not None:
-        return LanguageProficiency(name, raw_level, _ratio_to_level(ratio), "medium", True)
+        return LanguageProficiency(name, raw_level or line.strip(),
+                                   _ratio_to_level(ratio), "medium", True)
 
     # 5) Name found but no parseable level.
     return LanguageProficiency(name, raw_level, "Unknown", "low", False)

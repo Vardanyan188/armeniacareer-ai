@@ -76,3 +76,19 @@ def test_parse_languages_multiline():
 def test_non_language_line_returns_none():
     assert parse_language_line("Built data pipelines in Python") is None
     assert parse_language_line("") is None
+
+
+# ---------------------------------------------------------------------------
+# Phase 24.3 hotfix — level may appear BEFORE the language name
+# ---------------------------------------------------------------------------
+
+def test_level_before_name():
+    assert parse_language_line("Native Armenian").normalized_level == "Native"
+    assert parse_language_line("Advanced English").normalized_level == "Advanced"
+    assert parse_language_line("Advanced Russian").normalized_level == "Advanced"
+
+
+def test_level_before_name_multiline():
+    text = "LANGUAGE\nNative Armenian\nAdvanced English\nAdvanced Russian\n"
+    profs = {p.language_name: p.normalized_level for p in parse_languages(text)}
+    assert profs == {"Armenian": "Native", "English": "Advanced", "Russian": "Advanced"}

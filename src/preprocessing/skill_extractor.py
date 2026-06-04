@@ -79,6 +79,24 @@ _PROSE_WORDS = {
     "score", "private", "file", "files", "path", "paths", "delete", "remove",
     "export", "please", "your", "you", "we", "our", "build", "develop", "year",
     "years", "must", "should", "will", "ability", "able",
+    # Job-title / role words — these are roles, not technical skills. Prevents a
+    # bled-in line like "Software Engineer" / "Team Lead" from becoming a skill.
+    "engineer", "developer", "manager", "lead", "analyst", "consultant",
+    "specialist", "designer", "intern", "internship", "trainee", "architect",
+    "administrator", "scientist", "officer", "assistant", "coordinator",
+    "director", "company", "laboratory", "department", "team",
+    # Education / institution words — reject names like "Yerevan State University".
+    "student", "university", "faculty", "bachelor", "master", "institute",
+    "college", "school", "diploma", "degree", "gpa", "phd", "graduate",
+}
+
+# Known technical acronyms / tools that ARE valid even when written all-caps,
+# so the person-name filter (below) does not drop them.
+_KNOWN_TECH_LOWER = set(CANONICAL_CASE.keys()) | {
+    "sql", "html", "css", "bi", "crm", "erp", "aws", "gcp", "api", "sap", "php",
+    "xml", "json", "csv", "etl", "seo", "oop", "sdk", "ide", "nlp", "rest",
+    "rust", "scala", "kotlin", "swift", "ruby", "perl", "bash", "matlab",
+    "golang", "sas", "spss", "power bi", "ms office",
 }
 _STOP_OR_SOFT = _STOP_WORDS | _SOFT_SKILLS
 _REJECT_WORDS = _STOP_OR_SOFT | _PROSE_WORDS
@@ -115,9 +133,17 @@ def extract_skill_tokens(block: str) -> List[str]:
         # Real multi-word tools ("Power BI", "Google Analytics") have no such words.
         if any(w in _REJECT_WORDS for w in words):
             continue
+        # Reject broken artifacts containing angle brackets (e.g. "business >>").
+        if "<" in token or ">" in token:
+            continue
         if token.replace(".", "").replace(" ", "").isdigit():
             continue
         if len(token) < 2:
+            continue
+        # Reject all-UPPERCASE name-like tokens (e.g. "SRBUHI", "KHACHATRYAN",
+        # "YEREVAN") unless they are a known technical acronym/tool.
+        alpha = re.sub(r"[^A-Za-z]", "", token)
+        if len(alpha) >= 4 and alpha.isupper() and low not in _KNOWN_TECH_LOWER:
             continue
         canon = CANONICAL_CASE.get(low, token)
         key = canon.lower()

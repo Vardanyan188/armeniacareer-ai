@@ -91,4 +91,33 @@ STRINGS = {
         "Not for real candidate users. All four detail tabs are shown for testing."
     ),
     "admin.disabled_notice": "Admin / Demo tools are disabled in this environment.",
+
+    # CV intelligence report (Candidate Mode)
+    "cv.report.title": "CV intelligence report",
+    "cv.report.scanned_warning": (
+        "Low extraction quality — this looks like a scanned/image PDF with no text "
+        "layer. Please upload a text-based PDF or DOCX for an accurate analysis."
+    ),
+    "cv.report.low_warning": (
+        "Low extraction quality — very little readable text was found. "
+        "Results may be unreliable."
+    ),
+    "cv.report.partial_warning": "Partial extraction — some sections may not have been detected.",
+    "cv.report.quality_score": "CV quality score",
+    "cv.report.skills_detected": "Skills detected",
+    "cv.report.word_count": "Word count",
+    "cv.report.sections": "Sections",
+    "cv.report.contact_info": "Contact info",
+    "cv.report.work_experience": "Work Experience",
+    "cv.report.education": "Education",
+    "cv.report.skills": "Skills",
+    "cv.report.summary": "Summary",
+    "cv.report.present": "Yes",
+    "cv.report.missing": "Missing",
+    "cv.report.detected_skills": "Detected skills",
+    "cv.report.no_skills": "No recognised technical skills detected. Add a clear Skills section.",
+    "cv.report.languages": "Languages",
+    "cv.report.role_directions": "Possible role directions",
+    "cv.report.improvement": "Improvement suggestions",
+    "cv.report.no_issues": "No major structural issues detected. Strong CV foundation.",
 }

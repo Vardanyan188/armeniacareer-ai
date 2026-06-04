@@ -19,8 +19,15 @@
 | 13 — Interview engine | Deterministic candidate practice + recruiter verification guide. |
 | 13.1 — Product polish | Sidebar, micro-interactions, interview progress, semantic provider chain. |
 | 14 — Documentation | This documentation set. |
+| 15–18 — Quiz, bulk ranking, data governance, handbook | Candidate skill quiz, recruiter bulk ranking, dataset registry, system handbook. |
+| 19–21 — Depth, versioning, comfort | Skill-depth analysis, JD versioning/diff, UI comfort (status bar, exports, focus/print). |
+| 22–23 — Security & academics | Security hardening, prompt protection, audit logs, deployment gates, academic deliverables. |
+| 24.0–24.2 — Parser & CV intelligence | Robust section/skill parsing, multilingual + open-vocabulary extraction, CV quality advisory layer. |
+| 24.3A+B — Brand & i18n foundation | Brand/header lockup, header-spacing fix, and EN/HY/RU translation system with a language selector. |
+| 24.3 hotfix — Parser stabilization | Two-column header merges, section-content bounding (no skills bleed), language levels before/after the name, job-title filtering, and **CV intelligence report localization**. |
 
-Tagged checkpoints: `mvp-working-v1`, `role-ui-polished-v1`, `interview-engine-v1`.
+Tagged checkpoints: `mvp-working-v1`, `role-ui-polished-v1`, `interview-engine-v1`,
+and the per-phase tags through `brand-i18n-foundation-v1`.
 
 ## Remaining phases (planned)
 
@@ -32,6 +39,9 @@ Tagged checkpoints: `mvp-working-v1`, `role-ui-polished-v1`, `interview-engine-v
 
 ## Future production ideas
 
+- **Multilingual interview quality (24.3C)** — natural EN/HY/RU interview questions and feedback (curated-first, optional LLM enhancement, deterministic fallback).
+- **Full UI i18n** — extend EN/HY/RU coverage to the remaining internal panels (interview, quiz, skill-depth, governance, exports).
+- **CV visual/layout analyzer (24.3E, deferred)** — PDF page-count auto-detection, font/heading consistency, two-column risk, and color-coded proficiency — only where the extractor truly exposes it; **no guaranteed font/color analysis yet**.
 - **OCR** for scanned/image PDFs (currently detected and flagged only).
 - **Stronger LLM feedback** layer for interview answers and narratives (optional, behind keys).
 - **Database-backed candidate pool** (replace the file-based store; add retention/delete).

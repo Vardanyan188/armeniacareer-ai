@@ -17,7 +17,7 @@ from src.engine.access_control import get_shared_view
 from src.engine.audit_log import log_security_event, sanitize_error
 from src.engine.cv_quality import analyze_cv_quality
 from src.engine.orchestrator import run_analysis
-from src.ui.app_gates import is_candidate_pool_enabled
+from src.ui.app_gates import is_candidate_pool_enabled, is_debug_enabled
 from src.ui.components.candidate_pool_panel import render_candidate_pool_section
 from src.ui.components.cv_quality_panel import render_cv_quality
 from src.ui.components.export_panel import render_candidate_export
@@ -41,6 +41,40 @@ def _trust_labels(lang: str) -> list:
         t("trust.private_excluded", lang), t("trust.decision_support", lang),
         t("trust.no_auto_hiring", lang),
     ]
+
+
+def _render_cv_debug(report, filename: str) -> None:
+    """
+    Safe diagnostics for local/dev acceptance (gated by is_debug_enabled()).
+    Shows METADATA ONLY — never raw CV text, emails, phones, or private content.
+    Remove value: hidden automatically outside local/dev or ACAI_DEBUG.
+    """
+    diag = getattr(report, "diagnostics", {}) or {}
+    with st.expander("🔧 CV parse diagnostics (debug — local/dev only)", expanded=False):
+        st.caption("Safe metadata only — no CV text, emails, phones, or PII.")
+        ext = (filename or "").rsplit(".", 1)[-1].lower() if "." in (filename or "") else "?"
+        st.write({
+            "analyzer": diag.get("analyzer"),
+            "report": "fresh (no cache/session reuse)",
+            "uploaded_ext": ext,
+            "raw_word_count": diag.get("raw_word_count"),
+            "raw_line_count": diag.get("raw_line_count"),
+            "single_char_ratio_raw": diag.get("single_char_ratio_raw"),
+            "spacing_repaired": diag.get("spacing_repaired"),
+            "repaired_word_count": diag.get("repaired_word_count"),
+            "cv_score": round(report.quality_score, 3),
+            "skill_count": report.skill_count,
+            "sections_present": report.sections_present,
+            "contact_present": report.contact_info_present,
+            "languages_count": diag.get("languages_count"),
+            "language_levels": diag.get("language_levels"),
+            "detected_section_labels": diag.get("detected_section_labels"),
+        })
+        if diag.get("single_char_ratio_raw", 0) and diag["single_char_ratio_raw"] >= 0.40:
+            st.warning(
+                "High single-character ratio detected — the PDF extracted as "
+                "character-spaced text. The analyzer applied a spacing repair."
+            )
 from src.ui.tabs.tab_candidate_room import render_candidate_room
 from src.ui.tabs.tab_shared_analysis import render_shared_analysis_tab
 from src.ui.upload_utils import temp_jd_text, temp_upload
@@ -80,6 +114,8 @@ def render_candidate_mode() -> None:
         with temp_upload(uploaded) as cv_path:
             report = analyze_cv_quality(cv_path)
         render_cv_quality(report)
+        if is_debug_enabled():
+            _render_cv_debug(report, getattr(uploaded, "name", ""))
     except Exception as exc:
         log_security_event("sanitized_error_shown", severity="error", mode="Candidate")
         st.error(f"Could not analyze the CV: {sanitize_error(exc)}")
