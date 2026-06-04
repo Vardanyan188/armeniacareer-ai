@@ -69,3 +69,29 @@ def test_internship_and_degree_aliases():
     text = "INTERNSHIP\nIntern at X\n\nDEGREE\nBSc\n"
     labels = set(detected_section_labels(text))
     assert "experience" in labels and "education" in labels
+
+
+# ---------------------------------------------------------------------------
+# Phase 24.3 hotfix — content bounding + two-column merged headers
+# ---------------------------------------------------------------------------
+
+def test_section_content_does_not_bleed_past_repeated_label():
+    from src.preprocessing.section_detector import section_content
+    # 'experience' is first registered at VOLUNTEER EXPERIENCE (before skills);
+    # the later WORK EXPERIENCE must still bound the skills block.
+    text = (
+        "VOLUNTEER EXPERIENCE\nmentor\n"
+        "COMPUTER SKILLS\nPython\nSQL\n"
+        "WORK EXPERIENCE\nSoftware Engineer\n"
+    )
+    content = section_content(text, "skills")
+    joined = " ".join(content)
+    assert "Python" in joined and "SQL" in joined
+    assert "Software Engineer" not in joined      # bounded at WORK EXPERIENCE
+    assert "WORK EXPERIENCE" not in joined
+
+
+def test_two_column_merged_header_line_detects_both():
+    text = "PROFILE                 EDUCATION\nstudent  BSc 2020\n"
+    labels = set(detected_section_labels(text))
+    assert "summary" in labels and "education" in labels

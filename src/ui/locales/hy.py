@@ -95,4 +95,39 @@ STRINGS = {
         "Ոչ իրական թեկնածուների համար։ Բոլոր չորս ներդիրները ցուցադրվում են փորձարկման համար։"
     ),
     "admin.disabled_notice": "Ադմին / Դեմո գործիքներն այս միջավայրում անջատված են։",
+
+    # CV intelligence report (Candidate Mode)
+    "cv.report.title": "CV-ի վերլուծության հաշվետվություն",
+    "cv.report.scanned_warning": (
+        "Ցածր արդյունահանման որակ — սա հավանաբար սկանավորված/պատկերային PDF է՝ առանց "
+        "տեքստային շերտի։ Ճշգրիտ վերլուծության համար վերբեռնի՛ր տեքստային PDF կամ DOCX։"
+    ),
+    "cv.report.low_warning": (
+        "Ցածր արդյունահանման որակ — գտնվել է շատ քիչ ընթեռնելի տեքստ։ "
+        "Արդյունքները կարող են անվստահելի լինել։"
+    ),
+    "cv.report.partial_warning": (
+        "Մասնակի արդյունահանում — որոշ բաժիններ կարող են չհայտնաբերվել։"
+    ),
+    "cv.report.quality_score": "CV-ի որակի գնահատական",
+    "cv.report.skills_detected": "Հայտնաբերված հմտություններ",
+    "cv.report.word_count": "Բառերի քանակ",
+    "cv.report.sections": "Բաժիններ",
+    "cv.report.contact_info": "Կոնտակտային տվյալներ",
+    "cv.report.work_experience": "Աշխատանքային փորձ",
+    "cv.report.education": "Կրթություն",
+    "cv.report.skills": "Հմտություններ",
+    "cv.report.summary": "Ամփոփագիր",
+    "cv.report.present": "Այո",
+    "cv.report.missing": "Բացակայում է",
+    "cv.report.detected_skills": "Հայտնաբերված հմտություններ",
+    "cv.report.no_skills": (
+        "Տեխնիկական հմտություններ չեն հայտնաբերվել։ Ավելացրո՛ւ հստակ Հմտություններ բաժին։"
+    ),
+    "cv.report.languages": "Լեզուներ",
+    "cv.report.role_directions": "Հնարավոր մասնագիտական ուղղություններ",
+    "cv.report.improvement": "Բարելավման առաջարկներ",
+    "cv.report.no_issues": (
+        "Կառուցվածքային էական խնդիրներ չեն հայտնաբերվել։ Ամուր CV-ի հիմք։"
+    ),
 }

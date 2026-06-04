@@ -74,7 +74,7 @@ is presented as an **optional/advanced** component, not the deployed MVP backbon
 
 ## 7. Evaluation methodology and results
 
-Automated: **314 passing tests** plus a parsing-evaluation harness covering
+Automated: **386 passing tests** plus a parsing-evaluation harness covering
 extraction quality, guardrails, security/no-leak, prompt-injection, deterministic
 fallback, ranking, quiz, interview, skill-depth, and JD-versioning. Human
 evaluation is planned (8 demo-safe pairs, 2 reviewers; 5-pair fallback) on
@@ -98,6 +98,8 @@ safety/clarity. Full methodology and the results table: [EVALUATION.md](EVALUATI
 
 - Local prototype: Candidate Pool / private ingest are file-based (no auth/database).
 - No OCR — scanned/image PDFs are detected and flagged, not read.
+- No guaranteed font/color/visual-layout analysis yet — a richer CV visual/layout analyzer is deferred to future work.
+- UI internationalization (EN/HY/RU) is partial — the most visible surfaces and the CV intelligence report are localized; internal panels remain English.
 - Interview/quiz evaluation is deterministic/heuristic, not LLM-graded.
 - Skill-depth and JD-diff are heuristic and English-dominant (directional).
 - Prompt secrecy is best-effort once prompts reach a hosted LLM.
@@ -115,6 +117,8 @@ LLM nondeterminism from leaking into scores. The hardest work was not features b
 ## 11. Future work
 
 - Public deployment hardening (Streamlit Community Cloud) and a real auth layer.
+- Full UI internationalization (extend EN/HY/RU to the remaining internal panels) and natural multilingual interview questions/feedback.
+- A CV visual/layout analyzer (page-count auto-detection, font/heading consistency, two-column risk) where the extractor supports it.
 - Optional fine-tuning / model adaptation for domain-specific extraction.
 - Multilingual (hy/ru) depth and JD-diff coverage.
 - Database-backed candidate pool with consent lifecycle.

@@ -98,12 +98,16 @@ Ingest / Candidate-Pool persistence / debug all disabled via `ACAI_PUBLIC_DEMO=1
 
 - Full MVP complete: loaders → guardrails → adapters → orchestrator → assembler → access control → role-based UI.
 - Implemented: CV quality, CV↔JD matching, Candidate Pool, **Recruiter Bulk Ranking**, Skill Depth, JD Versioning, Interview Practice, Skill Quiz, Governance/Fallback, Dataset Registry, Private Ingest, Safe Exports, Focus/Print mode, Security Hardening, and audit logging.
-- **Tests:** `314 passed, 2 skipped` (`python -m pytest -q`); deterministic, offline, no keys required. See [docs/EVALUATION.md](docs/EVALUATION.md).
+- **Brand & multilingual UI:** a refreshed brand/header lockup and an **EN / Հայերեն / Русский** language selector. The most visible Candidate/Recruiter/Admin surfaces and the **CV intelligence report** are localized (full UI i18n is rolling out incrementally).
+- **Robust multilingual parsing:** CV/JD parsing handles non-standard headings (e.g. `PROFILE`, `CONTACT ME`, `COMPUTER SKILLS`), Armenian/Russian sections, two-column PDF header merges, open-vocabulary skills, slash-separated tool lists, and language proficiency levels — hardened through iterative development and regression testing.
+- **Tests:** `386 passed, 2 skipped` (`python -m pytest -q`); deterministic, offline, no keys required. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 ## Limitations
 
 - Local prototype: Candidate Pool / private ingest are file-based (no auth, no database).
 - No OCR — scanned/image PDFs are detected and flagged, not read.
+- No guaranteed font/color/visual-layout analysis yet — page count and visual cues are best-effort; a richer CV visual/layout analyzer is deferred to future work.
+- UI i18n is partial — internal panels (interview, quiz, skill-depth, governance, export Markdown) remain English for now.
 - Interview/quiz evaluation is deterministic/heuristic (no LLM grading).
 - Skill-depth and JD-diff are heuristic and English-dominant (directional signals).
 - Prompt secrecy is best-effort once prompts reach a hosted LLM; full internal prompts are **not** exposed. Streamlit has no built-in auth (use a proxy for non-local deploys).

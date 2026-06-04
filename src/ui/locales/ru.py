@@ -95,4 +95,39 @@ STRINGS = {
         "Не для реальных кандидатов. Все четыре вкладки показаны для тестирования."
     ),
     "admin.disabled_notice": "Инструменты Админ / Демо отключены в этой среде.",
+
+    # CV intelligence report (Candidate Mode)
+    "cv.report.title": "Отчёт по анализу резюме",
+    "cv.report.scanned_warning": (
+        "Низкое качество извлечения — похоже на сканированный/графический PDF без "
+        "текстового слоя. Загрузите текстовый PDF или DOCX для точного анализа."
+    ),
+    "cv.report.low_warning": (
+        "Низкое качество извлечения — найдено очень мало читаемого текста. "
+        "Результаты могут быть ненадёжными."
+    ),
+    "cv.report.partial_warning": (
+        "Частичное извлечение — некоторые разделы могли быть не распознаны."
+    ),
+    "cv.report.quality_score": "Оценка качества резюме",
+    "cv.report.skills_detected": "Найдено навыков",
+    "cv.report.word_count": "Количество слов",
+    "cv.report.sections": "Разделы",
+    "cv.report.contact_info": "Контактные данные",
+    "cv.report.work_experience": "Опыт работы",
+    "cv.report.education": "Образование",
+    "cv.report.skills": "Навыки",
+    "cv.report.summary": "Резюме",
+    "cv.report.present": "Да",
+    "cv.report.missing": "Отсутствует",
+    "cv.report.detected_skills": "Обнаруженные навыки",
+    "cv.report.no_skills": (
+        "Технические навыки не обнаружены. Добавьте чёткий раздел «Навыки»."
+    ),
+    "cv.report.languages": "Языки",
+    "cv.report.role_directions": "Возможные направления ролей",
+    "cv.report.improvement": "Рекомендации по улучшению",
+    "cv.report.no_issues": (
+        "Серьёзных структурных проблем не обнаружено. Прочная основа резюме."
+    ),
 }
