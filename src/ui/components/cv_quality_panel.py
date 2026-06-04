@@ -59,6 +59,14 @@ def render_cv_quality(report: Any) -> None:
     if report.languages:
         st.markdown(f"**{t('cv.report.languages', lang)}:** " + ", ".join(report.languages))
 
+    # Layout & readability advisory (safe, localized; shown only when relevant).
+    layout_warnings = (getattr(report, "diagnostics", {}) or {}).get("layout_warnings", [])
+    if layout_warnings:
+        st.divider()
+        st.markdown("#### " + t("cv.layout.title", lang))
+        for key in layout_warnings:
+            st.info(t(key, lang))
+
     st.divider()
     st.markdown("#### " + t("cv.report.role_directions", lang))
     for role in report.role_suggestions:

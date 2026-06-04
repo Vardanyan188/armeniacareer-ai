@@ -100,7 +100,9 @@ Ingest / Candidate-Pool persistence / debug all disabled via `ACAI_PUBLIC_DEMO=1
 - Implemented: CV quality, CV↔JD matching, Candidate Pool, **Recruiter Bulk Ranking**, Skill Depth, JD Versioning, Interview Practice, Skill Quiz, Governance/Fallback, Dataset Registry, Private Ingest, Safe Exports, Focus/Print mode, Security Hardening, and audit logging.
 - **Brand & multilingual UI:** a refreshed brand/header lockup and an **EN / Հայերեն / Русский** language selector. The most visible Candidate/Recruiter/Admin surfaces and the **CV intelligence report** are localized (full UI i18n is rolling out incrementally).
 - **Robust multilingual parsing:** CV/JD parsing handles non-standard headings (e.g. `PROFILE`, `CONTACT ME`, `COMPUTER SKILLS`), Armenian/Russian sections, two-column PDF header merges, open-vocabulary skills, slash-separated tool lists, and language proficiency levels — hardened through iterative development and regression testing.
-- **Tests:** `386 passed, 2 skipped` (`python -m pytest -q`); deterministic, offline, no keys required. See [docs/EVALUATION.md](docs/EVALUATION.md).
+- **Multilingual interview + rubric:** EN/HY/RU interview questions, follow-ups, feedback, and an eight-dimension answer rubric with confidence bands — deterministic, key-free, Armenian-first.
+- **CV layout analyzer (MVP):** advisory ATS/readability notes for Canva/template/two-column CVs (page count, character-spaced/symbol/visual-level risks). No OCR; no font/colour claims.
+- **Tests:** `437 passed, 2 skipped` (`python -m pytest -q`); deterministic, offline, no keys required. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 ## Limitations
 

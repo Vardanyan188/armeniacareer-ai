@@ -35,7 +35,7 @@ from src.preprocessing.document_loader import (
     list_jd_files,
     load_jd_json,
 )
-from src.ui.components.ui_kit import notice, section_header
+from src.ui.components.ui_kit import df_width_kwargs, notice, section_header
 from src.ui.upload_utils import build_jd_dict
 
 _DISCLAIMER = (
@@ -103,7 +103,7 @@ def _render_diff(diff) -> None:
             "Old depth": c.old_depth or "—",
             "New depth": c.new_depth or "—",
         } for c in diff.required_depth_changed]
-        st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+        st.dataframe(pd.DataFrame(rows), hide_index=True, **df_width_kwargs())
     if diff.newly_required_depth_gaps:
         _bullets("Newly deeper requirements", diff.newly_required_depth_gaps)
 

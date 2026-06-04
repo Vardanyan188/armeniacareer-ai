@@ -131,6 +131,25 @@ STRINGS = {
         "Серьёзных структурных проблем не обнаружено. Прочная основа резюме."
     ),
 
+    # CV layout / readability advisory (24.3E)
+    "cv.layout.title": "Вёрстка и читаемость",
+    "cv.layout.warn_template": (
+        "Похоже, это резюме использует шаблонную/двухколоночную вёрстку. Сейчас оно "
+        "читаемо, но некоторые ATS-системы могут распознавать его менее надёжно."
+    ),
+    "cv.layout.warn_visual_levels": (
+        "Используйте чёткие текстовые обозначения уровней языков (например, B2, "
+        "Свободно) вместо только визуальных звёзд/точек/полос."
+    ),
+    "cv.layout.warn_headings": (
+        "Делайте заголовки разделов стандартными и выделяемыми текстом для надёжного "
+        "распознавания."
+    ),
+    "cv.layout.warn_char_spaced": (
+        "Текст извлечён с необычными межсимвольными пробелами; он был автоматически "
+        "исправлен, но более чистый экспорт PDF или DOCX повышает надёжность."
+    ),
+
     # Interview (candidate practice + recruiter verification)
     "interview.practice_title": "Практика собеседования",
     "interview.practice_notice": (
@@ -167,4 +186,25 @@ STRINGS = {
     "interview.must_ask": "Обязательно спросить",
     "interview.recommended": "Рекомендуется",
     "interview.optional": "Опционально",
+
+    # Interview rubric / evaluation quality (24.3D)
+    "interview.rubric.title": "Оценка ответа",
+    "interview.rubric.confidence": "Уверенность оценки",
+    "interview.rubric.strengths": "Сильные стороны",
+    "interview.rubric.improvements": "Области для улучшения",
+    "interview.rubric.better": "Как сделать сильнее",
+    "interview.rubric.learning": "Рекомендуемый фокус обучения",
+    "interview.rubric.followup": "Полезный уточняющий вопрос",
+    "interview.evidence_title": "Уверенность доказательств и что проверить",
+    "interview.risk_signals": "Сигналы риска / пробелов",
+    "interview.validate": "Что проверить на живом собеседовании",
+    "interview.distinction_title": "Сигналы, рассматриваемые отдельно",
+    "interview.dim.technical_correctness": "Техническая корректность",
+    "interview.dim.depth": "Глубина",
+    "interview.dim.relevance": "Релевантность",
+    "interview.dim.clarity": "Ясность",
+    "interview.dim.practical_example": "Практический пример",
+    "interview.dim.communication": "Коммуникация",
+    "interview.dim.confidence": "Выраженная уверенность",
+    "interview.dim.gap_risk": "Риск пробела",
 }

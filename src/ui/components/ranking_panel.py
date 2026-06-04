@@ -22,7 +22,7 @@ from src.engine.ranking.models import MAX_BATCH, AnalysisStatus
 from src.ui.components.export_panel import render_bulk_ranking_export, render_recruiter_export
 from src.ui.components.governance_panel import render_governance_panel
 from src.ui.components.interview_panel import render_recruiter_verification_panel
-from src.ui.components.ui_kit import notice, section_header, stat_chips
+from src.ui.components.ui_kit import df_width_kwargs, notice, section_header, stat_chips
 from src.ui.tabs.tab_recruiter_room import render_recruiter_room
 from src.ui.tabs.tab_shared_analysis import render_shared_analysis_tab
 from src.ui.upload_utils import temp_jd_text, temp_jd_upload, temp_upload
@@ -111,7 +111,7 @@ def _render_table(bulk) -> None:
             "Priority": c.priority_label,
             "Reason": c.failure_reason or "",
         })
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, **df_width_kwargs())
 
 
 def _render_detail(bulk) -> None:

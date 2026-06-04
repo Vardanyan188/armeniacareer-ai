@@ -182,6 +182,20 @@ def test_repair_spacing_is_noop_on_normal_text(tmp_path):
     assert r.quality_score > 0.8           # unchanged behavior
 
 
+def test_layout_diagnostics_present_and_page_count_passthrough(tmp_path):
+    r = analyze_cv_quality(_write(tmp_path, _GOOD_CV), page_count=2)
+    assert r.diagnostics["page_count"] == 2
+    assert "layout" in r.diagnostics and "warnings" in r.diagnostics["layout"]
+    # Clean CV → no layout warnings (no false alarm).
+    assert r.diagnostics["layout_warnings"] == []
+
+
+def test_layout_warnings_for_char_spaced_cv(tmp_path):
+    r = analyze_cv_quality(_write(tmp_path, _CHAR_SPACED_CV, name="spaced2.txt"))
+    assert r.diagnostics["layout_warnings"]   # template/headings/char-spaced advisory present
+    assert "cv.layout.warn_template" in r.diagnostics["layout_warnings"]
+
+
 def test_repair_spacing_unit():
     from src.engine.cv_quality import repair_spacing
     # Repair only triggers on a realistically char-spaced document (>=30 tokens,

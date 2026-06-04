@@ -12,6 +12,7 @@ import streamlit as st
 
 from src.engine.audit_log import sanitize_error
 from src.ui.app_gates import is_debug_enabled
+from src.ui.components.ui_kit import df_width_kwargs
 
 
 def _label(value: Any) -> str:
@@ -58,7 +59,7 @@ def render_governance_panel(result: Any) -> None:
     phase1 = {k: _label(v) for k, v in gov.phase1_agent_status.items()}
     st.dataframe(
         pd.DataFrame({"status": list(phase1.values())}, index=list(phase1.keys())),
-        use_container_width=True,
+        **df_width_kwargs(),
     )
     st.markdown(f"**Phase 2 (bias & safety) status:** {_label(gov.phase2_agent_status)}")
 

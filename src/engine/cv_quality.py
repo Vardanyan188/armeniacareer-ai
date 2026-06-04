@@ -34,6 +34,7 @@ from src.engine.cv_recommendations import (
 from src.guardrails.input_guardrail import mask_pii
 from src.preprocessing.document_loader import load_resume_text
 from src.preprocessing.language_proficiency import parse_languages
+from src.preprocessing.layout_analysis import analyze_layout
 from src.preprocessing.language_utils import detect_languages
 from src.preprocessing.parsing_quality import assess_parsing_quality
 from src.preprocessing.section_detector import detect_sections, detected_section_labels, section_content
@@ -320,10 +321,17 @@ def analyze_cv_quality(cv_path: PathLike, page_count: Optional[int] = None) -> C
         improvements + section_recs + skill_org_recs + lang_recs + page_recs
     )
 
+    # Layout / visual diagnostics (MVP) — safe metadata + advisory warning keys.
+    layout = analyze_layout(
+        raw_text, page_count=page_count, detected_labels=sorted(detected_labels),
+        skill_count=len(skills), language_count=len(languages), source_ext=source_ext,
+    )
+
     # Safe diagnostics (metadata only; no raw CV text, no PII).
     diagnostics = {
         "analyzer": "analyze_cv_quality",
         "source_ext": source_ext,
+        "page_count": page_count,
         "raw_word_count": len(raw_text.split()),
         "repaired_word_count": word_count,
         "raw_line_count": raw_text.count("\n") + 1,
@@ -333,6 +341,8 @@ def analyze_cv_quality(cv_path: PathLike, page_count: Optional[int] = None) -> C
         "languages_count": len(languages),
         "language_levels": [d.get("normalized_level") for d in
                             [p.to_dict() for p in profs]],
+        "layout": layout.to_dict(),
+        "layout_warnings": list(layout.warnings),
     }
 
     return CVQualityReport(

@@ -10,6 +10,8 @@ from typing import Any, List
 import pandas as pd
 import streamlit as st
 
+from src.ui.components.ui_kit import df_width_kwargs
+
 
 def _skill_dataframe(entries: List[Any]) -> pd.DataFrame:
     rows = []
@@ -31,7 +33,7 @@ def render_skill_table(title: str, entries: List[Any], empty_text: str = "None")
     # Drop the transfer column entirely when no entry carries a confidence value.
     if df["Transfer confidence"].isna().all():
         df = df.drop(columns=["Transfer confidence"])
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, hide_index=True, **df_width_kwargs())
 
 
 def render_skill_overview(matched, missing_critical, missing_preferred, transferable) -> None:

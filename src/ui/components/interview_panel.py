@@ -17,6 +17,8 @@ from src.engine.interview.candidate_practice import (
     current_prompt,
     submit_answer,
 )
+from types import SimpleNamespace
+
 from src.engine.interview.localizer import (
     localize_band,
     localize_candidate_question,
@@ -24,6 +26,12 @@ from src.engine.interview.localizer import (
     localize_verification,
 )
 from src.engine.interview.recruiter_verification import build_recruiter_verification_guide
+from src.engine.interview.rubric import (
+    DIMENSIONS,
+    candidate_rubric_feedback,
+    evaluate_rubric,
+    recruiter_confidence_summary,
+)
 from src.ui.components.ui_kit import (
     badge,
     humanize_seniority,
@@ -72,6 +80,29 @@ def _render_evaluation(ev: Any, lang: str) -> None:
         st.markdown(f"- {tip}")
 
 
+def _render_candidate_rubric(answer: str, target: str, lang: str, key: str) -> None:
+    """Localized, multi-dimension rubric evaluation for one answer (additive)."""
+    q = SimpleNamespace(target=target or "", kind="general")
+    rub = evaluate_rubric(answer, q)
+    fb = candidate_rubric_feedback(rub, q, lang)
+    title = f"{t('interview.rubric.title', lang)} · {fb['band']} ({fb['score']}%)"
+    with st.expander(title, expanded=False):
+        st.caption(f"{t('interview.rubric.confidence', lang)}: {fb['confidence_band']}")
+        for d in DIMENSIONS:
+            progress_row(t(f"interview.dim.{d}", lang), rub.dimensions.get(d, 0.0) * 100)
+        if fb["strengths"]:
+            st.markdown("**" + t("interview.rubric.strengths", lang) + "**")
+            for s in fb["strengths"]:
+                st.markdown(f"- {s}")
+        if fb["improvements"]:
+            st.markdown("**" + t("interview.rubric.improvements", lang) + "**")
+            for s in fb["improvements"]:
+                st.markdown(f"- {s}")
+        st.markdown(f"**{t('interview.rubric.better', lang)}:** {fb['better_answer']}")
+        st.markdown(f"**{t('interview.rubric.learning', lang)}:** {fb['learning_focus']}")
+        st.markdown(f"**{t('interview.rubric.followup', lang)}:** {fb['follow_up']}")
+
+
 def render_candidate_interview_panel(result: Any) -> None:
     lang = current_lang()
     state = _get_candidate_state(result)
@@ -106,6 +137,7 @@ def render_candidate_interview_panel(result: Any) -> None:
         st.markdown(f"**Q{i}.** {turn['prompt_shown']}")
         st.caption(f"{answer_prefix}: {turn['answer'][:300]}")
         _render_evaluation(turn["evaluation"], lang)
+        _render_candidate_rubric(turn["answer"], "", lang, key=f"rub_{i}")
         if not turn["follow_up"].advances and turn["follow_up"].text:
             st.caption(f"{t('interview.followup', lang)}: "
                        f"{localize_followup(turn['follow_up'].text, '', lang)}")
@@ -188,3 +220,20 @@ def render_recruiter_verification_panel(result: Any) -> None:
             st.markdown("**" + t("interview.followups_header", lang) + "**")
             for f in loc["followups"]:
                 st.markdown(f"- {f}")
+
+    # ── Evidence confidence & what to verify (anti-overclaim summary) ────────
+    st.divider()
+    summ = recruiter_confidence_summary(get_recruiter_view(result.payload), lang)
+    section_header(t("interview.evidence_title", lang))
+    st.markdown(badge(t("interview.rubric.confidence", lang) + f": {summ['confidence_band']}", "info"),
+                unsafe_allow_html=True)
+    if summ["risk_signals"]:
+        st.markdown("**" + t("interview.risk_signals", lang) + "**")
+        for s in summ["risk_signals"]:
+            st.markdown(f"- {s}")
+    st.markdown("**" + t("interview.validate", lang) + "**")
+    for s in summ["validate"]:
+        st.markdown(f"- {s}")
+    st.markdown("**" + t("interview.distinction_title", lang) + "**")
+    for v in summ["distinction"].values():
+        st.markdown(f"- {v}")

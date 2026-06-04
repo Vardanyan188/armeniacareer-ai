@@ -20,7 +20,7 @@ import streamlit as st
 
 from src.engine.access_control import get_skill_depth_view
 from src.engine.skill_depth.models import DepthMatchType
-from src.ui.components.ui_kit import notice, section_header
+from src.ui.components.ui_kit import df_width_kwargs, notice, section_header
 
 _DIRECTIONAL = (
     "Directional only — depth is inferred heuristically from CV/JD evidence and "
@@ -59,7 +59,7 @@ def render_candidate_skill_depth(result: Any) -> None:
         "Needed": e.required_depth_label,
         "Gap": e.depth_gap if e.depth_gap else "—",
     } for e in analysis.entries]
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, **df_width_kwargs())
 
     strengthen = [e for e in analysis.entries if e.match_type in _GAP_TYPES]
     if strengthen:
@@ -94,7 +94,7 @@ def render_recruiter_skill_depth(result: Any) -> None:
         "Match": e.match_type.value.replace("_", " "),
         "Evidence": _evidence(e),
     } for e in analysis.entries]
-    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+    st.dataframe(pd.DataFrame(rows), hide_index=True, **df_width_kwargs())
 
     gaps = [e for e in analysis.entries if e.match_type in _GAP_TYPES]
     if gaps:

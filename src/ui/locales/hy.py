@@ -131,6 +131,25 @@ STRINGS = {
         "Կառուցվածքային էական խնդիրներ չեն հայտնաբերվել։ Ամուր CV-ի հիմք։"
     ),
 
+    # CV layout / readability advisory (24.3E)
+    "cv.layout.title": "Դասավորություն և ընթեռնելիություն",
+    "cv.layout.warn_template": (
+        "Այս CV-ն, ըստ երևույթին, օգտագործում է կաղապարային/երկսյունակ դասավորություն։ "
+        "Այն այժմ ընթեռնելի է, սակայն որոշ ATS համակարգեր կարող են այն ավելի քիչ "
+        "հուսալիորեն մշակել։"
+    ),
+    "cv.layout.warn_visual_levels": (
+        "Լեզուների մակարդակների համար օգտագործի՛ր հստակ տեքստային պիտակներ "
+        "(օր.՝ B2, Սահուն)՝ միայն աստղիկների/կետերի/գծիկների փոխարեն։"
+    ),
+    "cv.layout.warn_headings": (
+        "Պահի՛ր բաժինների վերնագրերը ստանդարտ և տեքստով ընտրելի՝ հուսալի մշակման համար։"
+    ),
+    "cv.layout.warn_char_spaced": (
+        "Տեքստը արդյունահանվել է անսովոր նիշային բացատներով. այն ինքնաշտկվեց, սակայն "
+        "ավելի մաքուր PDF կամ DOCX արտահանումը բարձրացնում է հուսալիությունը։"
+    ),
+
     # Interview (candidate practice + recruiter verification)
     "interview.practice_title": "Հարցազրույցի պրակտիկա",
     "interview.practice_notice": (
@@ -166,4 +185,25 @@ STRINGS = {
     "interview.must_ask": "Պարտադիր հարցնել",
     "interview.recommended": "Խորհուրդ է տրվում",
     "interview.optional": "Ընտրովի",
+
+    # Interview rubric / evaluation quality (24.3D)
+    "interview.rubric.title": "Պատասխանի գնահատում",
+    "interview.rubric.confidence": "Գնահատման վստահություն",
+    "interview.rubric.strengths": "Ուժեղ կողմեր",
+    "interview.rubric.improvements": "Բարելավման ոլորտներ",
+    "interview.rubric.better": "Ինչպես ավելի ուժեղ դարձնել",
+    "interview.rubric.learning": "Առաջարկվող ուսումնական ուղղություն",
+    "interview.rubric.followup": "Օգտակար հետևողական հարց",
+    "interview.evidence_title": "Ապացույցների վստահություն և ինչ ստուգել",
+    "interview.risk_signals": "Ռիսկի / բացերի ազդանշաններ",
+    "interview.validate": "Ինչ ստուգել կենդանի հարցազրույցում",
+    "interview.distinction_title": "Առանձին պահվող ազդանշաններ",
+    "interview.dim.technical_correctness": "Տեխնիկական ճշտություն",
+    "interview.dim.depth": "Խորություն",
+    "interview.dim.relevance": "Համապատասխանություն",
+    "interview.dim.clarity": "Հստակություն",
+    "interview.dim.practical_example": "Գործնական օրինակ",
+    "interview.dim.communication": "Հաղորդակցում",
+    "interview.dim.confidence": "Արտահայտված վստահություն",
+    "interview.dim.gap_risk": "Բացի ռիսկ",
 }

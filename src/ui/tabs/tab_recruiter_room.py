@@ -12,6 +12,7 @@ import pandas as pd
 import streamlit as st
 
 from src.ui.components.ui_kit import (
+    df_width_kwargs,
     humanize_label,
     humanize_seniority,
     is_low_score,
@@ -73,7 +74,7 @@ def render_recruiter_room(result: Any) -> None:
             "Suggested question": vp.suggested_interview_question,
             "Importance": vp.importance_level.replace("_", " ").title(),
         } for vp in rp.verification_points])
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        st.dataframe(df, hide_index=True, **df_width_kwargs())
     elif very_low:
         st.caption(
             "No verification points — insufficient CV evidence. Verify core "

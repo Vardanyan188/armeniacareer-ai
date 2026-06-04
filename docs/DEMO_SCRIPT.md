@@ -30,14 +30,24 @@ real interviews here are often Armenian-speaking."
 
 ### Real-CV parsing check
 
-Upload a realistic, non-standard CV (e.g. a two-column layout with headings like
-`PROFILE`, `CONTACT ME`, `COMPUTER SKILLS`, `LANGUAGE`, `WORK EXPERIENCE`).
+Upload a realistic, non-standard CV (e.g. a two-column Canva layout with headings
+like `PROFILE`, `CONTACT ME`, `COMPUTER SKILLS`, `LANGUAGE`, `WORK EXPERIENCE`).
 Confirm the report detects **Summary, Contact, Education, Work Experience, Skills**,
 extracts tools (incl. slash-separated lists like `HTML/CSS/JavaScript`), reads
 **language levels** (e.g. *Armenian — Native, English — Advanced*), and does **not**
 turn job titles (e.g. *Software Engineer*) into skills. The quality score should
 reflect a mostly-parseable CV, not a false-low. *Say:* "Robust parsing was
 hardened through iterative development, regression testing, and human review."
+
+### Layout & readability advisory (24.3E)
+
+For a Canva/template/two-column CV, the report shows a localized **Layout &
+readability** note — e.g. "appears to use a template/two-column layout… some ATS
+systems may parse it less reliably", "use clear text labels for language levels
+instead of only stars/dots", and "keep section headings standard and
+text-selectable". *Say:* "Honest, advisory only — it reads the extracted text and
+page count; it does **not** do OCR or claim font/colour analysis." Raw diagnostics
+stay behind the local/dev debug panel and never show in the public demo.
 
 ## 1. Candidate Mode
 
@@ -61,6 +71,15 @@ hardened through iterative development, regression testing, and human review."
   and the recruiter Verification Interview render in natural Armenian/Russian with
   **no API keys**. *"Armenian-first, hardened through iterative development, testing,
   and human review."*
+- **Rubric evaluation check:** submit an answer and open **"Answer evaluation"** — an
+  eight-dimension rubric (technical correctness, depth, relevance, clarity, practical
+  example, communication, expressed confidence, gap risk) with an **assessment
+  confidence band**, localized strengths/improvements, "how to make it stronger",
+  a learning focus, and a follow-up. In Recruiter Mode, the Verification Interview
+  ends with **"Evidence confidence & what to verify"** — confidence band, gap signals,
+  what to validate live, and the CV-quality / JD-match / skill-depth / interview-
+  performance signals kept explicitly separate. *"It suggests and flags for
+  verification — it never claims certainty."*
 - Skill Quiz: deterministic questions + study-next suggestions.
 
 ## 3. Recruiter Mode

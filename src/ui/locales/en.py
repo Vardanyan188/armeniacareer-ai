@@ -121,6 +121,24 @@ STRINGS = {
     "cv.report.improvement": "Improvement suggestions",
     "cv.report.no_issues": "No major structural issues detected. Strong CV foundation.",
 
+    # CV layout / readability advisory (24.3E)
+    "cv.layout.title": "Layout & readability",
+    "cv.layout.warn_template": (
+        "This CV appears to use a template/two-column layout. It is readable now, "
+        "but some ATS systems may parse it less reliably."
+    ),
+    "cv.layout.warn_visual_levels": (
+        "Use clear text labels for language levels (e.g. B2, Fluent) instead of "
+        "only visual stars/dots/bars."
+    ),
+    "cv.layout.warn_headings": (
+        "Keep section headings standard and text-selectable for reliable parsing."
+    ),
+    "cv.layout.warn_char_spaced": (
+        "The text was extracted with unusual character spacing; it was auto-repaired, "
+        "but a cleaner PDF or DOCX export improves reliability."
+    ),
+
     # Interview (candidate practice + recruiter verification)
     "interview.practice_title": "Interview Practice",
     "interview.practice_notice": (
@@ -156,4 +174,25 @@ STRINGS = {
     "interview.must_ask": "Must ask",
     "interview.recommended": "Recommended",
     "interview.optional": "Optional",
+
+    # Interview rubric / evaluation quality (24.3D)
+    "interview.rubric.title": "Answer evaluation",
+    "interview.rubric.confidence": "Assessment confidence",
+    "interview.rubric.strengths": "Strengths",
+    "interview.rubric.improvements": "Improvement areas",
+    "interview.rubric.better": "How to make it stronger",
+    "interview.rubric.learning": "Suggested learning focus",
+    "interview.rubric.followup": "Useful follow-up",
+    "interview.evidence_title": "Evidence confidence & what to verify",
+    "interview.risk_signals": "Risk / gap signals",
+    "interview.validate": "What to validate in the live interview",
+    "interview.distinction_title": "Signals kept separate",
+    "interview.dim.technical_correctness": "Technical correctness",
+    "interview.dim.depth": "Depth",
+    "interview.dim.relevance": "Relevance",
+    "interview.dim.clarity": "Clarity",
+    "interview.dim.practical_example": "Practical example",
+    "interview.dim.communication": "Communication",
+    "interview.dim.confidence": "Expressed confidence",
+    "interview.dim.gap_risk": "Gap risk",
 }

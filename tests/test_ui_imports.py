@@ -75,6 +75,27 @@ def test_render_entrypoints_exist():
         assert callable(fn)
 
 
+def test_no_direct_use_container_width_in_panels():
+    # Deprecation guard: call sites must use df_width_kwargs(); only the compat
+    # helper in ui_kit.py may reference the legacy parameter name.
+    import pathlib
+    root = pathlib.Path(__file__).resolve().parents[1] / "src" / "ui"
+    offenders = []
+    for path in root.rglob("*.py"):
+        if path.name == "ui_kit.py":
+            continue
+        if "use_container_width" in path.read_text(encoding="utf-8"):
+            offenders.append(path.name)
+    assert offenders == [], f"use_container_width still used directly in: {offenders}"
+
+
+def test_df_width_kwargs_shape():
+    from src.ui.components.ui_kit import df_width_kwargs
+    kw = df_width_kwargs()
+    assert ("width" in kw) ^ ("use_container_width" in kw)   # exactly one key
+    assert list(kw.values())[0] in (True, "stretch")
+
+
 def test_humanize_seniority_labels():
     from src.ui.components.ui_kit import humanize_label, humanize_seniority
 

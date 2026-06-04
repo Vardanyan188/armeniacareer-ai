@@ -507,8 +507,45 @@ Deterministic-first, defense-in-depth. Full detail in
 - **Armenian-first**, hand-authored for professional phrasing; **deterministic and
   key-free** (no provider calls, no prompts/secrets/errors exposed). An optional
   LLM enhancement could later wrap the localizer without changing this floor.
-- **Remaining English:** dynamic per-answer feedback sentences and improvement
-  tips from `answer_eval`, and recorded history prompts.
+- **Remaining English:** recorded history prompts (the current question is localized).
+
+### Interview rubric / evaluation quality (Phase 24.3D)
+
+- **Additive rubric** (`src/engine/interview/rubric.py`) — deterministic, derives
+  eight bounded (0–1) dimensions per answer: technical correctness, depth,
+  relevance, clarity, practical example, communication, expressed confidence, and
+  gap risk. The interview engine is **not** modified.
+- **Weak-answer detection:** vague, generic/memorized, irrelevant, does-not-address,
+  no practical example, no measurable detail, missing key concept, too-short, and
+  overconfident-but-unsupported.
+- **Candidate feedback (EN/HY/RU):** band + score, strengths, improvement areas,
+  "how to make it stronger", a learning focus, one useful follow-up, and an
+  **assessment confidence band** (how much to trust the evaluation, not a verdict).
+- **Recruiter summary (read-only over `recruiter_view`):** evidence confidence band,
+  gap/risk signals to verify, what to validate live, and the four signals — **CV
+  quality, JD match, skill-depth confidence, interview performance** — kept
+  explicitly separate.
+- **Anti-overclaim:** wording uses "suggests" / "may indicate" / "needs verification"
+  / confidence bands — never "definitely" or "proves". Deterministic and key-free.
+
+### CV layout analyzer MVP + deploy/compatibility (Phase 24.3E)
+
+- **Public-deploy import fix:** the brand helpers (`brand_mark_svg`,
+  `brand_lockup_html`, `app_header_html`) live in `ui_kit` and are imported by
+  `streamlit_app`. A public deploy of an older intermediate commit lacked them in
+  `ui_kit`, causing an `ImportError`; redeploying current `main` resolves it, and a
+  new import-contract test (`test_brand_header`) guards against recurrence.
+- **Streamlit compatibility:** `ui_kit.df_width_kwargs()` returns `width="stretch"`
+  on Streamlit ≥ 1.40 and `use_container_width=True` on older versions, so full-width
+  tables work without the deprecation warning. All panels call the helper; only
+  `ui_kit` references the legacy parameter (guarded by a test).
+- **Layout analyzer** (`src/preprocessing/layout_analysis.py`): honest, deterministic
+  diagnostics from extracted text + optional PDF page count (`pypdf` if present, else
+  `None`). Detects character-spaced extraction, high symbol/icon density, visual-only
+  language levels, and template/two-column risk; emits localized **ATS-readability
+  advisories** (template/two-column, visual levels, standard headings, char-spacing).
+  **No OCR; no font/colour claims.** Raw diagnostics are debug-gated; the advisory
+  notes are safe and visible.
 
 ---
 

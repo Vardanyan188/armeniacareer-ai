@@ -111,8 +111,10 @@ def render_candidate_mode() -> None:
 
     # ── Section A: CV-only intelligence ────────────────────────────────────
     try:
+        from src.preprocessing.layout_analysis import detect_pdf_page_count
         with temp_upload(uploaded) as cv_path:
-            report = analyze_cv_quality(cv_path)
+            page_count = detect_pdf_page_count(cv_path)   # None unless a readable PDF
+            report = analyze_cv_quality(cv_path, page_count=page_count)
         render_cv_quality(report)
         if is_debug_enabled():
             _render_cv_debug(report, getattr(uploaded, "name", ""))

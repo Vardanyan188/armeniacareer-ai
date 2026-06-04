@@ -389,6 +389,26 @@ def status_chip_html(label: str, kind: str = "neutral") -> str:
     return badge(label, kind)
 
 
+# ── Streamlit version-compat: full-width dataframe kwargs ────────────────────
+# Newer Streamlit (>= 1.40) replaces use_container_width with width="stretch"/
+# "content"; older versions only accept the boolean. This keeps a single source
+# of truth so call sites never pass the deprecated parameter directly.
+
+def _supports_width_str() -> bool:
+    try:
+        major, minor = (int(p) for p in st.__version__.split(".")[:2])
+        return (major, minor) >= (1, 40)
+    except Exception:  # pragma: no cover - defensive
+        return False
+
+
+def df_width_kwargs(stretch: bool = True) -> dict:
+    """Returns the correct full-width/content kwargs for the running Streamlit."""
+    if _supports_width_str():
+        return {"width": "stretch" if stretch else "content"}
+    return {"use_container_width": stretch}
+
+
 # ── Phase 24.3A: brand lockup + app header (pure HTML builders) ──────────────
 
 def brand_mark_svg(size: int = 28) -> str:

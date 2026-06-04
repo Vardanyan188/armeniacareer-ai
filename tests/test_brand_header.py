@@ -54,6 +54,21 @@ def test_app_header_admin_badge():
     assert "Internal Demo Mode" in html
 
 
+def test_ui_kit_exports_all_names_streamlit_app_needs():
+    # Regression guard for the public ImportError: streamlit_app imports these
+    # exact names from ui_kit — they must all exist.
+    import importlib
+    ui_kit = importlib.import_module("src.ui.components.ui_kit")
+    for name in ("brand_mark_svg", "brand_lockup_html", "app_header_html",
+                 "inject_global_style", "inject_presentation_css", "df_width_kwargs"):
+        assert hasattr(ui_kit, name), f"ui_kit is missing required export: {name}"
+
+
+def test_streamlit_app_imports_cleanly():
+    import streamlit_app
+    assert callable(streamlit_app.main)
+
+
 def test_inject_global_style_has_top_padding():
     # The header-spacing fix lives in inject_global_style — verify the rule shape.
     import inspect

@@ -74,7 +74,7 @@ is presented as an **optional/advanced** component, not the deployed MVP backbon
 
 ## 7. Evaluation methodology and results
 
-Automated: **406 passing tests** plus a parsing-evaluation harness covering
+Automated: **437 passing tests** plus a parsing-evaluation harness covering
 extraction quality, guardrails, security/no-leak, prompt-injection, deterministic
 fallback, ranking, quiz, interview, skill-depth, and JD-versioning. Human
 evaluation is planned (8 demo-safe pairs, 2 reviewers; 5-pair fallback) on
@@ -98,7 +98,7 @@ safety/clarity. Full methodology and the results table: [EVALUATION.md](EVALUATI
 
 - Local prototype: Candidate Pool / private ingest are file-based (no auth/database).
 - No OCR — scanned/image PDFs are detected and flagged, not read.
-- No guaranteed font/color/visual-layout analysis yet — a richer CV visual/layout analyzer is deferred to future work.
+- No OCR, and no guaranteed font/colour analysis — the layout analyzer (MVP) reads extracted text + PDF page count and flags template/two-column, character-spaced, symbol-density, and visual-only-level risks with ATS advisories; deeper font/colour analysis is future work.
 - UI internationalization (EN/HY/RU) is partial — the most visible surfaces and the CV intelligence report are localized; internal panels remain English.
 - Interview/quiz evaluation is deterministic/heuristic, not LLM-graded.
 - Skill-depth and JD-diff are heuristic and English-dominant (directional).

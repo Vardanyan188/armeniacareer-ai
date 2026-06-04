@@ -22,7 +22,7 @@ from src.engine.candidate_pool import (
     is_duplicate,
     list_candidates,
 )
-from src.ui.components.ui_kit import section_header
+from src.ui.components.ui_kit import df_width_kwargs, section_header
 
 
 def _as_bytes(value: Any) -> bytes:
@@ -107,4 +107,4 @@ def render_approved_pool(base_dir=None) -> None:
         "Skills": ", ".join(r.detected_skills[:6]),
         "Added": (r.created_at or "")[:10],
     } for r in records])
-    st.dataframe(df, use_container_width=True, hide_index=True)
+    st.dataframe(df, hide_index=True, **df_width_kwargs())
