@@ -9,9 +9,10 @@
 #   - Heavy agents are NEVER imported at module load. They are lazily imported
 #     inside try/except blocks so a missing instructor/langchain/openai install
 #     can never break `import src.engine.orchestrator`.
-#   - No LLM call is attempted unless OPENAI_API_KEY is present (auto-detected),
-#     and any agent import/dependency/API failure degrades to a deterministic
-#     fallback rather than raising.
+#   - No LLM call is attempted unless providers are explicitly enabled (see the
+#     provider-configuration block below: not a public demo, ACAI_ENABLE_LLM=1,
+#     and at least one provider key present). Any agent import/dependency/API
+#     failure degrades to a deterministic fallback rather than raising.
 #   - The existing PayloadAssembler is used as-is (its NarrativeGenerator already
 #     falls back deterministically when Gemini/langchain is unavailable), so no
 #     change to payload_assembler.py or scoring.py is required.
@@ -74,6 +75,134 @@ def google_embedding_model() -> str:
     """Resolves the Google embedding model name (env-overridable, prefixed)."""
     name = (os.environ.get("GOOGLE_EMBEDDING_MODEL") or _DEFAULT_GOOGLE_EMBEDDING_MODEL).strip()
     return name if name.startswith("models/") else f"models/{name}"
+
+
+# ===========================================================================
+# Provider configuration (single source of truth)
+# ===========================================================================
+#
+# LLM usage is OPT-IN and gated, in this order:
+#   1) Public demo (ACAI_PUBLIC_DEMO=1 or APP_ENV in {demo, prod}) → never call a
+#      provider, even if keys are present (deterministic-only, safe public demo).
+#   2) Otherwise, providers are used only when ACAI_ENABLE_LLM is truthy AND at
+#      least one provider key is available.
+# Gemini accepts EITHER GOOGLE_API_KEY or GEMINI_API_KEY. Keys are never logged,
+# rendered, or returned — only their presence (a boolean) is ever exposed.
+
+_TRUTHY = {"1", "true", "yes", "on"}
+
+
+def _flag(name: str) -> bool:
+    return os.environ.get(name, "").strip().lower() in _TRUTHY
+
+
+def is_public_demo() -> bool:
+    """Hard public lockdown (mirrors src.ui.app_gates, kept import-light here)."""
+    if _flag("ACAI_PUBLIC_DEMO"):
+        return True
+    return (os.environ.get("APP_ENV", "").strip().lower()) in {"demo", "prod"}
+
+
+def gemini_api_key() -> Optional[str]:
+    """Gemini/Google key — supports both GOOGLE_API_KEY and GEMINI_API_KEY."""
+    return os.environ.get("GOOGLE_API_KEY") or os.environ.get("GEMINI_API_KEY") or None
+
+
+def openai_api_key() -> Optional[str]:
+    return os.environ.get("OPENAI_API_KEY") or None
+
+
+def preferred_provider() -> str:
+    """ACAI_LLM_PROVIDER: 'gemini' | 'openai' | 'auto' (default 'auto')."""
+    value = (os.environ.get("ACAI_LLM_PROVIDER") or "auto").strip().lower()
+    return value if value in {"gemini", "openai", "auto"} else "auto"
+
+
+def provider_availability() -> Dict[str, bool]:
+    """Which providers have a usable key. Always all-False in public demo."""
+    if is_public_demo():
+        return {"gemini": False, "openai": False}
+    return {"gemini": bool(gemini_api_key()), "openai": bool(openai_api_key())}
+
+
+def resolve_llm_enabled() -> bool:
+    """Central LLM enable decision (see module note above)."""
+    if is_public_demo():
+        return False
+    if not _flag("ACAI_ENABLE_LLM"):
+        return False
+    return bool(gemini_api_key() or openai_api_key())
+
+
+# Sanitized provider-error categories (never raw exception text).
+def provider_error_category(error: Any) -> str:
+    """
+    Maps an exception/message to a SAFE category token:
+      missing_key | auth_failed | quota_or_rate_limit | timeout | provider_error
+    Never returns raw paths, secrets, or stack traces.
+    """
+    low = str(error or "").lower()
+    if any(h in low for h in ("api key", "api_key", "missing key", "no key", "not set", "credential")):
+        return "missing_key"
+    if any(h in low for h in ("quota", "rate limit", "rate-limit", "429", "resource exhausted")):
+        return "quota_or_rate_limit"
+    if any(h in low for h in ("permission", "denied", "unauthorized", "forbidden", "401", "403", "invalid api")):
+        return "auth_failed"
+    if any(h in low for h in ("timeout", "timed out", "deadline", "connection", "network", "unreachable")):
+        return "timeout"
+    return "provider_error"
+
+
+def safe_provider_status(result: Any = None) -> Dict[str, object]:
+    """
+    Local-only SAFE provider diagnostics for the UI. Contains NO keys, NO raw
+    errors, NO PII — only booleans, provider names, and category tokens.
+
+    Keys: enabled, available (per provider), selected, fallback_active,
+    error_category (or None).
+    """
+    available = provider_availability()
+    enabled = resolve_llm_enabled()
+    selected: Optional[str] = None
+    fallback_active = True
+    error_category: Optional[str] = None
+
+    if is_public_demo():
+        return {
+            "enabled": False,
+            "available": available,
+            "selected": None,
+            "fallback_active": True,
+            "error_category": "disabled_by_public_demo",
+        }
+
+    provider_status = getattr(result, "provider_status", None) or {}
+    sem = provider_status.get("semantic_alignment") if isinstance(provider_status, dict) else None
+    if sem == "openai":
+        selected, fallback_active = "openai", False
+    elif sem == "google":
+        selected, fallback_active = "gemini", False
+    elif sem == "deterministic":
+        fallback_active = True
+
+    agent_errors = getattr(result, "agent_errors", None) or {}
+    if fallback_active and isinstance(agent_errors, dict):
+        first_err = next(
+            (v for k, v in agent_errors.items() if k.startswith("semantic_alignment")),
+            None,
+        )
+        if first_err:
+            error_category = provider_error_category(first_err)
+        elif enabled and not (available["gemini"] or available["openai"]):
+            error_category = "missing_key"
+
+    return {
+        "enabled": enabled,
+        "available": available,
+        "selected": selected,
+        "fallback_active": fallback_active,
+        "error_category": error_category,
+    }
 
 # Boundary-guarded patterns for the MVP skill list (reused for CV fallback).
 _SKILL_PATTERNS = {
@@ -149,9 +278,21 @@ class AnalysisOrchestrator:
     """
 
     def __init__(self, enable_llm: Optional[bool] = None) -> None:
+        # When not forced, the central resolver decides: providers are used only
+        # outside public demo, with ACAI_ENABLE_LLM=1 and at least one key present.
         if enable_llm is None:
-            enable_llm = bool(os.environ.get("OPENAI_API_KEY"))
+            enable_llm = resolve_llm_enabled()
         self._llm_enabled = enable_llm
+
+    # ── Provider preference (honours ACAI_LLM_PROVIDER) ────────────────────
+
+    def _openai_active(self) -> bool:
+        """OpenAI agents run only when enabled, keyed, and not deselected."""
+        return self._llm_enabled and bool(openai_api_key()) and preferred_provider() in {"auto", "openai"}
+
+    def _gemini_active(self) -> bool:
+        """Gemini embeddings run only when enabled, keyed, and not deselected."""
+        return self._llm_enabled and bool(gemini_api_key()) and preferred_provider() in {"auto", "gemini"}
 
     # ── Sync / async entrypoints ───────────────────────────────────────────
 
@@ -271,7 +412,10 @@ class AnalysisOrchestrator:
         errors: Dict[str, str],
     ):
         """Returns (cv_entities, parsed_cv_or_None)."""
-        if self._llm_enabled:
+        # The document-intelligence agent is OpenAI-backed; only attempt it when
+        # OpenAI is active (a Gemini-only / gemini-preferred setup uses the
+        # deterministic CV path plus Google semantic embeddings, no spurious errors).
+        if self._openai_active():
             try:
                 from src.agents.document_intelligence_agent import DocumentIntelligenceAgent
                 agent = DocumentIntelligenceAgent()
@@ -297,8 +441,8 @@ class AnalysisOrchestrator:
           3) deterministic skill-overlap fallback.
         Each step is gated/lazy so missing keys or libraries never raise.
         """
-        # 1) OpenAI path (requires OPENAI_API_KEY + a parsed CV from the doc agent).
-        if self._llm_enabled and parsed_cv is not None:
+        # 1) OpenAI path (requires an active OpenAI key + a parsed CV from the doc agent).
+        if self._openai_active() and parsed_cv is not None:
             try:
                 from src.agents.semantic_alignment_agent import SemanticAlignmentAgent
                 output = await SemanticAlignmentAgent().arun(parsed_cv, jd_entities, session_id)
@@ -309,10 +453,11 @@ class AnalysisOrchestrator:
                 logger.warning("OpenAI semantic alignment failed (%s). Trying alternates.", exc)
                 errors["semantic_alignment"] = str(exc)
 
-        # 2) Google/Gemini embedding path — ONLY when LLM use is enabled. With
-        #    enable_llm=False this is skipped even if GOOGLE_API_KEY is present
-        #    (deterministic kill-switch: no external provider calls in tests/demo).
-        if self._llm_enabled:
+        # 2) Google/Gemini embedding path — ONLY when Gemini is active (enabled,
+        #    keyed via GOOGLE_API_KEY or GEMINI_API_KEY, and not deselected). With
+        #    enable_llm=False or in public demo this is skipped even if a key is
+        #    present (deterministic kill-switch: no external provider calls).
+        if self._gemini_active():
             try:
                 google_sem = await self._google_semantic(jd_entities, cv_entities)
                 if google_sem is not None:
@@ -335,7 +480,7 @@ class AnalysisOrchestrator:
         caller falls through to the deterministic path). Never makes a network
         call without an API key.
         """
-        if not os.environ.get("GOOGLE_API_KEY"):
+        if not gemini_api_key():
             return None
         try:
             from langchain_google_genai import GoogleGenerativeAIEmbeddings
@@ -367,7 +512,8 @@ class AnalysisOrchestrator:
     async def _resolve_skills(
         self, parsed_cv, jd_entities, cv_entities, session_id, statuses, errors,
     ) -> SkillsOntologyResult:
-        if self._llm_enabled and parsed_cv is not None:
+        # OpenAI-backed; requires an active OpenAI key and the parsed CV from the doc agent.
+        if self._openai_active() and parsed_cv is not None:
             try:
                 from src.agents.skills_ontology_agent import SkillsOntologyAgent
                 output = await SkillsOntologyAgent().arun(parsed_cv, jd_entities, session_id)

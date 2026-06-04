@@ -40,11 +40,14 @@ cp .env.example .env     # PowerShell: Copy-Item .env.example .env
 
 | Variable | Enables |
 |---|---|
-| `OPENAI_API_KEY` | Analysis agents + OpenAI embeddings |
+| `ACAI_ENABLE_LLM` | **Opt-in switch for AI providers.** Set to `1` (outside public demo) to allow live provider calls. Unset/`0` ⇒ deterministic only, even with keys present. |
+| `OPENAI_API_KEY` | Analysis agents + OpenAI embeddings (used when `ACAI_ENABLE_LLM=1`) |
 | `GOOGLE_API_KEY` | Gemini narratives + alternate embedding provider |
+| `GEMINI_API_KEY` | Accepted as an **alias** for the Gemini/Google key (use either name) |
+| `ACAI_LLM_PROVIDER` | Optional. `auto` (default) / `gemini` / `openai` — provider preference when keys exist. |
 | `GOOGLE_EMBEDDING_MODEL` | Optional. Google embedding model for semantic fallback (default `gemini-embedding-001`) |
 | `ACAI_ENABLE_INGEST` | Optional. Set to `1` to unlock the internal Admin-only **Data Ingest** panel (private-dataset persistence). Hidden by default. |
-| `APP_ENV` | `local` / `dev` / `demo` / `prod` — `demo`/`prod` trigger public lockdown |
+| `APP_ENV` | `local` / `dev` / `demo` / `prod` — `demo`/`prod` trigger public lockdown (and disable all providers) |
 | `ACAI_ENABLE_ADMIN` | Optional. Show the Admin/Demo workspace (never in public). |
 | `ACAI_ENABLE_CANDIDATE_POOL` | Optional. Allow Candidate Pool persistence (local/dev default on; public off). |
 | `ACAI_DEBUG` | Optional. Show sanitized technical details (local/dev only). |
@@ -66,6 +69,59 @@ export GOOGLE_API_KEY="..."
 ```
 
 `.env` is git-ignored. Never commit real keys.
+
+### Provider modes & how the fallback works
+
+Provider usage is **opt-in and gated**. The app never calls a provider unless it
+is explicitly enabled, and every provider failure degrades to the deterministic
+path without crashing.
+
+| Mode | Env | Behaviour |
+|---|---|---|
+| **Local deterministic fallback** | `APP_ENV=local` (no `ACAI_ENABLE_LLM`) | No provider calls; deterministic analysis. Keys, if present, are ignored. |
+| **Local AI-enabled** | `APP_ENV=local`, `ACAI_ENABLE_LLM=1`, at least one key | Uses Gemini (`GOOGLE_API_KEY` or `GEMINI_API_KEY`) and/or OpenAI (`OPENAI_API_KEY`); preference via `ACAI_LLM_PROVIDER`. On missing/invalid/quota-limited keys or any provider error → deterministic fallback. |
+| **Public demo** | `APP_ENV=demo` or `ACAI_PUBLIC_DEMO=1` | **Hard lockdown**: providers disabled and keys ignored even if set; deterministic only; no provider errors shown. |
+
+```powershell
+# 1) Local deterministic fallback (no keys needed)
+$env:APP_ENV = "local"
+streamlit run streamlit_app.py
+
+# 2) Local AI-enabled mode (Gemini and/or OpenAI)
+$env:APP_ENV = "local"
+$env:ACAI_ENABLE_LLM = "1"
+# set ONE or BOTH (placeholders shown — never commit real values):
+$env:GOOGLE_API_KEY = "<your-gemini-key>"   # or $env:GEMINI_API_KEY
+$env:OPENAI_API_KEY = "<your-openai-key>"
+# optional preference: gemini | openai | auto
+$env:ACAI_LLM_PROVIDER = "auto"
+streamlit run streamlit_app.py
+
+# 3) Public demo simulation (providers disabled, keys ignored)
+$env:APP_ENV = "demo"
+$env:ACAI_PUBLIC_DEMO = "1"
+streamlit run streamlit_app.py
+```
+
+The status bar shows a **safe** summary only — "AI provider active: Gemini/OpenAI"
+or "AI provider unavailable — deterministic fallback is active". It never prints
+keys or raw provider errors.
+
+### Verify a key is set without printing it
+
+Check only the **length** (never the value), so a key is never echoed to the
+terminal, logs, or screenshots:
+
+```powershell
+# PowerShell — prints only a length number, not the secret
+if ($env:GOOGLE_API_KEY) { "GOOGLE_API_KEY length: $($env:GOOGLE_API_KEY.Length)" } else { "GOOGLE_API_KEY: not set" }
+if ($env:OPENAI_API_KEY) { "OPENAI_API_KEY length: $($env:OPENAI_API_KEY.Length)" } else { "OPENAI_API_KEY: not set" }
+```
+
+```bash
+# macOS / Linux — prints only the character count
+[ -n "$GOOGLE_API_KEY" ] && echo "GOOGLE_API_KEY length: ${#GOOGLE_API_KEY}" || echo "GOOGLE_API_KEY: not set"
+```
 
 ### Internal Data Ingest (optional, Admin-only)
 

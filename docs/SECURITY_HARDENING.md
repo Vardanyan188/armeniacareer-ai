@@ -45,8 +45,16 @@ before any deployment, and an honest statement of residual risk.
 | `ACAI_ENABLE_INGEST=1` | show Private Ingest (never in public) |
 | `ACAI_ENABLE_CANDIDATE_POOL=1` | allow pool persistence (local/dev default on; public off) |
 | `ACAI_DEBUG=1` | sanitized technical details (local/dev only) |
-| `ACAI_PUBLIC_DEMO=1` | hard lockdown: Admin/Ingest/Pool/Debug OFF |
+| `ACAI_PUBLIC_DEMO=1` | hard lockdown: Admin/Ingest/Pool/Debug **and providers** OFF |
+| `ACAI_ENABLE_LLM=1` | opt-in for live AI providers (ignored in public demo) |
 | `ACAI_ENABLE_AUDIT_LOG=1` | enable privacy-safe JSONL logs (off by default) |
+
+**Provider gating.** No external provider is called unless it is **not** a public
+demo, `ACAI_ENABLE_LLM=1`, **and** a key is present (`GOOGLE_API_KEY`/`GEMINI_API_KEY`
+for Gemini, `OPENAI_API_KEY` for OpenAI). Keys are **never** logged, rendered, or
+returned — only presence (a boolean) and a sanitized error **category**
+(`missing_key` / `auth_failed` / `quota_or_rate_limit` / `timeout` / `provider_error`
+/ `disabled_by_public_demo`) are ever exposed, and only in debug.
 
 ## 5. Governance sanitization
 
@@ -96,8 +104,10 @@ ACAI_ENABLE_ADMIN=0
 ACAI_ENABLE_INGEST=0
 ACAI_ENABLE_CANDIDATE_POOL=0
 ACAI_ENABLE_AUDIT_LOG=0
+ACAI_ENABLE_LLM=0
 ACAI_DEBUG=0
 # No OPENAI_API_KEY / GOOGLE_API_KEY → deterministic fallback (intended for the demo).
+# Even if keys were present, public demo ignores them and calls no provider.
 ```
 
 With this config the Admin/Demo workspace, Private Ingest, Candidate-Pool

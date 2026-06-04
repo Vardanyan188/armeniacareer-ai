@@ -67,6 +67,8 @@ STRINGS = {
     "status.fallback_ready": "Fallback-ready · API optional",
     "status.decision_support": "Decision-support only",
     "status.mode_prefix": "Mode",
+    "status.provider_active": "AI provider active",
+    "status.provider_fallback": "AI provider unavailable — deterministic fallback is active",
 
     # Candidate mode
     "candidate.cv_step": "Your CV",

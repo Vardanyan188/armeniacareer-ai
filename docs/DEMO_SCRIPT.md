@@ -20,6 +20,22 @@ full "ArmeniaCareer AI" wordmark), the **sidebar workspace switcher** with a
 contextual "How it works" list, the **status bar** (provider / data-safety / ingest)
 with the **Focus mode** toggle, and the responsible-AI footer.
 
+### Provider modes (what to say about AI)
+
+The status bar shows a **safe** provider summary — "AI provider active:
+Gemini/OpenAI" or "AI provider unavailable — deterministic fallback is active". It
+never shows keys or raw errors. Three ways to run (see SETUP.md for commands):
+
+- **Local deterministic fallback** (`APP_ENV=local`, no `ACAI_ENABLE_LLM`) — the
+  default; no keys, fully functional.
+- **Local AI-enabled** (`ACAI_ENABLE_LLM=1` + a Gemini and/or OpenAI key) — providers
+  enhance results; any failure falls back deterministically.
+- **Public demo** (`ACAI_PUBLIC_DEMO=1`) — providers disabled and keys ignored.
+
+*Say:* "AI is opt-in and never required. The public demo is deterministic by design;
+locally we can switch providers on, and if a provider is missing or rate-limited it
+silently falls back — no crash, no leaked errors."
+
 ### Language check (EN / Հայերեն / Русский)
 
 In the sidebar, switch the **Language** selector between English, Հայերեն, and

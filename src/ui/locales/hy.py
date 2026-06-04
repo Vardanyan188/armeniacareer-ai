@@ -70,6 +70,8 @@ STRINGS = {
     "status.fallback_ready": "Պահեստային՝ պատրաստ · API-ն ընտրովի",
     "status.decision_support": "Միայն որոշումների աջակցություն",
     "status.mode_prefix": "Ռեժիմ",
+    "status.provider_active": "AI մատակարարը ակտիվ է",
+    "status.provider_fallback": "AI մատակարարն անհասանելի է — գործում է դետերմինիստական պահեստայինը",
 
     # Candidate mode
     "candidate.cv_step": "Քո CV-ն",

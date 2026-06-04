@@ -70,6 +70,8 @@ STRINGS = {
     "status.fallback_ready": "Резерв готов · API опционально",
     "status.decision_support": "Только поддержка решений",
     "status.mode_prefix": "Режим",
+    "status.provider_active": "ИИ-провайдер активен",
+    "status.provider_fallback": "ИИ-провайдер недоступен — активен детерминированный резерв",
 
     # Candidate mode
     "candidate.cv_step": "Ваше резюме",

@@ -98,13 +98,19 @@ def test_ingest_status_responds_to_env(monkeypatch):
 def test_provider_status_defaults_to_deterministic_without_keys(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
-    assert ub.provider_status_label(None) == "Deterministic-ready"
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    # Safe fallback wording when no provider is active.
+    assert ub.provider_status_label(None) == "AI provider unavailable — deterministic fallback is active"
 
 
-def test_provider_status_reflects_result():
+def test_provider_status_reflects_result(monkeypatch):
+    monkeypatch.delenv("ACAI_PUBLIC_DEMO", raising=False)
+    monkeypatch.delenv("APP_ENV", raising=False)
+
     class _R:
         provider_status = {"semantic_alignment": "google"}
-    assert ub.provider_status_label(_R()) == "Provider: Google"
+        agent_errors = {}
+    assert ub.provider_status_label(_R()) == "AI provider active: Gemini"
 
 
 def test_status_chips_and_bar_html_are_safe(monkeypatch):

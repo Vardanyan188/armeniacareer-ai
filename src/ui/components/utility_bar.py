@@ -53,18 +53,21 @@ def ingest_status_label() -> str:
 
 def provider_status_label(result: Any = None) -> str:
     """
-    Calm provider summary. Defaults to 'Deterministic-ready' (no API key needed);
-    if a result carries provider_status, reflect the semantic provider.
+    Calm, safe provider summary. Reflects the central provider resolver:
+      - an active provider →  "AI provider active: Gemini/OpenAI"
+      - otherwise          →  "AI provider unavailable — deterministic fallback…"
+    Never exposes keys or raw errors. Lazy import keeps this module light.
     """
-    status = getattr(result, "provider_status", None) or {}
-    provider = status.get("semantic_alignment") if isinstance(status, dict) else None
-    if provider == "openai":
-        return "Provider: OpenAI"
-    if provider == "google":
-        return "Provider: Google"
-    if provider == "deterministic":
-        return "Provider: deterministic"
-    return "Deterministic-ready"
+    try:
+        from src.engine.orchestrator import safe_provider_status
+        selected = safe_provider_status(result).get("selected")
+    except Exception:  # pragma: no cover - defensive (never break the status bar)
+        selected = None
+    if selected == "openai":
+        return f"{t('status.provider_active')}: OpenAI"
+    if selected == "gemini":
+        return f"{t('status.provider_active')}: Gemini"
+    return t("status.provider_fallback")
 
 
 def status_chips(mode: str, result: Any = None) -> List[Tuple[str, str]]:

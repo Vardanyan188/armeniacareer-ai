@@ -81,9 +81,15 @@ deterministic path):
 
 | Variable | Purpose |
 |---|---|
+| `ACAI_ENABLE_LLM` | Opt-in switch for live AI providers (`1` to enable; ignored in public demo). |
 | `OPENAI_API_KEY` | Enables the LLM analysis agents + OpenAI embeddings. |
-| `GOOGLE_API_KEY` | Enables Gemini narratives + the alternate embedding provider. |
-| `APP_ENV` | `local` / `staging` / `production` (informational). |
+| `GOOGLE_API_KEY` / `GEMINI_API_KEY` | Enables Gemini narratives + the alternate embedding provider (either name works). |
+| `ACAI_LLM_PROVIDER` | Optional provider preference: `auto` (default) / `gemini` / `openai`. |
+| `APP_ENV` | `local` / `dev` / `demo` / `prod` — `demo`/`prod` lock down the public demo and disable providers. |
+
+AI is **opt-in**: no provider is called unless it is not a public demo,
+`ACAI_ENABLE_LLM=1`, and a key is present. Any missing/invalid/rate-limited key or
+provider error falls back to the deterministic path without crashing.
 
 See [docs/SETUP.md](docs/SETUP.md) for details and troubleshooting.
 
@@ -102,7 +108,7 @@ Ingest / Candidate-Pool persistence / debug all disabled via `ACAI_PUBLIC_DEMO=1
 - **Robust multilingual parsing:** CV/JD parsing handles non-standard headings (e.g. `PROFILE`, `CONTACT ME`, `COMPUTER SKILLS`), Armenian/Russian sections, two-column PDF header merges, open-vocabulary skills, slash-separated tool lists, and language proficiency levels — hardened through iterative development and regression testing.
 - **Multilingual interview + rubric:** EN/HY/RU interview questions, follow-ups, feedback, and an eight-dimension answer rubric with confidence bands — deterministic, key-free, Armenian-first.
 - **CV layout analyzer (MVP):** advisory ATS/readability notes for Canva/template/two-column CVs (page count, character-spaced/symbol/visual-level risks). No OCR; no font/colour claims.
-- **Tests:** `437 passed, 2 skipped` (`python -m pytest -q`); deterministic, offline, no keys required. See [docs/EVALUATION.md](docs/EVALUATION.md).
+- **Tests:** `452 passed, 2 skipped` (`python -m pytest -q`); deterministic, offline, no keys required. See [docs/EVALUATION.md](docs/EVALUATION.md).
 
 ## Limitations
 
