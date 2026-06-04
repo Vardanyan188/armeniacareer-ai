@@ -1,0 +1,15 @@
+Profile
+Software engineer with frontend and backend experience across web platforms.
+
+Աշխատանքային փորձ
+Company — Software Engineer
+Mar 2021 – Present
+- Built web applications with React and Python.
+- Designed REST APIs and integrated PostgreSQL databases.
+- Collaborated with designers and product managers on delivery.
+
+Education
+University of Yerevan, BSc in Computer Science, 2017–2021
+
+Հմտություններ
+Python, JavaScript, React, Docker, SQL, Git

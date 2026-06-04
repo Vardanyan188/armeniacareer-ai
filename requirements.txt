@@ -1,0 +1,31 @@
+# ArmeniaCareer AI — MVP runtime dependencies
+# Pinned with conservative lower bounds compatible with the Pydantic v2 stack.
+# Only packages actually imported by the codebase on the MVP critical path are listed.
+
+# --- Core data modelling ---
+pydantic>=2.7,<3
+typing-extensions>=4.11
+
+# --- Shared Analysis Engine: LLM clients & structured output ---
+openai>=1.40
+instructor>=1.3
+tenacity>=8.3
+langchain-core>=0.2
+langchain-openai>=0.1
+langchain-google-genai>=1.0
+
+# --- Numerics (semantic alignment embeddings) ---
+numpy>=1.26
+
+# --- Document loading (Phase 2) ---
+pypdf>=4.2
+python-docx>=1.1
+
+# --- Dashboard UI ---
+streamlit>=1.36
+plotly>=5.22
+pandas>=2.0
+
+# NOTE: The advanced hybrid RAG reranker in src/engine/rag_pipeline.py is FROZEN and
+# not on the MVP path. It additionally requires `langchain`, `langchain-chroma`, and
+# `rank-bm25`. Install those separately if/when that optional module is exercised.

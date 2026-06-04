@@ -1,0 +1,208 @@
+# src/engine/cv_quality.py
+#
+# CV-only intelligence — deterministic, no JD, no LLM, no orchestrator.
+#
+# Produces a CVQualityReport from a single resume file:
+#   - detected skills (reusing the shared MVP skill aliases)
+#   - section / contact presence
+#   - missing or weak sections
+#   - possible role-family directions (static skill→role map)
+#   - concrete improvement suggestions
+#   - a simple 0..1 quality score
+#
+# This path intentionally does NOT touch run_analysis / PayloadAssembler — a
+# CV-quality review does not require a job description.
+
+from __future__ import annotations
+
+import re
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Dict, List, Union
+
+from src.engine.adapters import MVP_SKILL_ALIASES
+from src.guardrails.input_guardrail import mask_pii
+from src.preprocessing.document_loader import load_resume_text
+from src.preprocessing.language_utils import detect_languages
+from src.preprocessing.parsing_quality import assess_parsing_quality
+from src.preprocessing.section_detector import detected_section_labels
+
+PathLike = Union[str, Path]
+
+# Canonical section labels this report tracks (subset of the detector's labels).
+_TRACKED_SECTIONS = ["experience", "education", "skills", "summary"]
+
+# Boundary-guarded skill patterns (same approach used elsewhere).
+_SKILL_PATTERNS = {
+    canonical: [
+        re.compile(r"(?<![a-z0-9])" + re.escape(alias.lower()) + r"(?![a-z0-9])")
+        for alias in aliases
+    ]
+    for canonical, aliases in MVP_SKILL_ALIASES.items()
+}
+
+# Section header cues (English / Armenian / Russian).
+_SECTION_KEYWORDS: Dict[str, List[str]] = {
+    "experience": ["experience", "work history", "employment", "աշխատանք", "փորձ", "опыт работы", "опыт"],
+    "education": ["education", "degree", "university", "կրթություն", "образование", "университет"],
+    "skills": ["skills", "technologies", "tech stack", "հմտություն", "навыки", "технологии"],
+    "summary": ["summary", "objective", "profile", "about me", "ամփոփում", "о себе"],
+}
+
+_LANGUAGE_KEYWORDS: Dict[str, List[str]] = {
+    "English": ["english", "անգլերեն", "английск"],
+    "Armenian": ["armenian", "հայերեն", "армянск"],
+    "Russian": ["russian", "ռուսերեն", "русск"],
+    "French": ["french", "ֆրանսերեն", "французск"],
+    "German": ["german", "գերմաներեն", "немецк"],
+}
+
+# Role family → indicative canonical skills (deterministic, extensible).
+_ROLE_FAMILIES: Dict[str, set] = {
+    "Backend Engineer": {"Python", "Java", "Go", "C#", "SQL", "PostgreSQL", "Django", "FastAPI", "Flask", "Node.js"},
+    "Frontend Engineer": {"JavaScript", "TypeScript", "React", "Angular", "Vue", "Node.js"},
+    "Data Analyst / Scientist": {"Python", "SQL", "Excel", "Power BI", "Tableau", "Spark"},
+    "Data Engineer": {"SQL", "Spark", "Airflow", "Kafka", "ClickHouse", "Python"},
+    "DevOps / Cloud Engineer": {"Docker", "Kubernetes", "AWS", "Azure", "GCP", "Linux"},
+}
+
+_MIN_ROLE_OVERLAP = 2
+
+
+@dataclass
+class CVQualityReport:
+    detected_skills: List[str] = field(default_factory=list)
+    skill_count: int = 0
+    sections_present: Dict[str, bool] = field(default_factory=dict)
+    missing_sections: List[str] = field(default_factory=list)
+    contact_info_present: bool = False
+    languages: List[str] = field(default_factory=list)
+    word_count: int = 0
+    role_suggestions: List[str] = field(default_factory=list)
+    improvement_suggestions: List[str] = field(default_factory=list)
+    quality_score: float = 0.0
+    # Extraction-quality diagnostics (Phase 10).
+    extraction_quality_band: str = "good"
+    is_probably_scanned: bool = False
+    extraction_reasons: List[str] = field(default_factory=list)
+
+
+def _detect_skills(low_text: str) -> List[str]:
+    found: List[str] = []
+    for canonical, patterns in _SKILL_PATTERNS.items():
+        if any(p.search(low_text) for p in patterns):
+            found.append(canonical)
+    return found
+
+
+def _detect_sections(low_text: str) -> Dict[str, bool]:
+    return {
+        section: any(kw in low_text for kw in cues)
+        for section, cues in _SECTION_KEYWORDS.items()
+    }
+
+
+def _detect_languages(low_text: str) -> List[str]:
+    return [lang for lang, cues in _LANGUAGE_KEYWORDS.items() if any(c in low_text for c in cues)]
+
+
+def _suggest_roles(skills: List[str]) -> List[str]:
+    skill_set = set(skills)
+    scored = []
+    for family, family_skills in _ROLE_FAMILIES.items():
+        overlap = len(skill_set & family_skills)
+        if overlap >= _MIN_ROLE_OVERLAP:
+            scored.append((overlap, family))
+    scored.sort(key=lambda x: (-x[0], x[1]))
+    suggestions = [family for _, family in scored[:3]]
+    if not suggestions:
+        suggestions = ["General IT / Entry-level (broaden and specialise your skill set)"]
+    return suggestions
+
+
+def _improvements(
+    sections: Dict[str, bool],
+    contact_present: bool,
+    skill_count: int,
+    word_count: int,
+    has_metric: bool,
+) -> List[str]:
+    tips: List[str] = []
+    if not contact_present:
+        tips.append("Add contact information (a professional email).")
+    if not sections.get("summary"):
+        tips.append("Add a short professional summary at the top.")
+    if not sections.get("skills"):
+        tips.append("Add a dedicated Skills section listing tools and technologies.")
+    if not sections.get("experience"):
+        tips.append("Add a Work Experience section with roles, dates, and outcomes.")
+    if not sections.get("education"):
+        tips.append("Add an Education section.")
+    if skill_count < 3:
+        tips.append("List more concrete technical skills relevant to your target role.")
+    if word_count < 150:
+        tips.append("Expand your CV — it currently looks too short to be informative.")
+    if not has_metric:
+        tips.append("Add measurable achievements (numbers, %, or impact statements).")
+    return tips
+
+
+def analyze_cv_quality(cv_path: PathLike) -> CVQualityReport:
+    """Deterministic CV-only quality analysis. No JD, no LLM, no orchestrator."""
+    text = load_resume_text(cv_path)
+    low_text = text.lower()
+    source_ext = Path(cv_path).suffix
+
+    # Extraction-quality assessment (robust, multilingual; flags scanned PDFs).
+    quality = assess_parsing_quality(text, source_ext=source_ext)
+
+    # Contact detection from the original text (before any masking of display).
+    _, pii_fields = mask_pii(text)
+    contact_present = any(f in pii_fields for f in ("email", "phone")) or \
+        any(kw in low_text for kw in ("email", "e-mail", "phone", "հեռախոս", "эл. почта"))
+
+    skills = _detect_skills(low_text)
+    # Robust multilingual section detection (canonical labels → tracked subset).
+    detected_labels = set(detected_section_labels(text))
+    sections = {s: (s in detected_labels) for s in _TRACKED_SECTIONS}
+    languages = detect_languages(text)
+    word_count = len(text.split())
+    has_metric = ("%" in text) or bool(re.search(r"\b\d{2,}\b", text))
+
+    missing_sections = [s for s, present in sections.items() if not present]
+    improvements = _improvements(sections, contact_present, len(skills), word_count, has_metric)
+    if quality.is_probably_scanned:
+        improvements.insert(
+            0,
+            "This looks like a scanned/image PDF with no text layer. Upload a "
+            "text-based PDF or DOCX for an accurate analysis.",
+        )
+
+    # Simple, transparent quality score over 8 binary signals.
+    signals = [
+        contact_present,
+        sections.get("summary", False),
+        sections.get("skills", False),
+        sections.get("experience", False),
+        sections.get("education", False),
+        len(skills) >= 3,
+        word_count >= 150,
+        has_metric,
+    ]
+    quality_score = round(sum(1 for s in signals if s) / len(signals), 3)
+
+    return CVQualityReport(
+        detected_skills=skills,
+        skill_count=len(skills),
+        sections_present=sections,
+        missing_sections=missing_sections,
+        contact_info_present=contact_present,
+        languages=languages,
+        word_count=word_count,
+        role_suggestions=_suggest_roles(skills),
+        improvement_suggestions=improvements,
+        quality_score=quality_score,
+        extraction_quality_band=quality.extraction_quality_band,
+        is_probably_scanned=quality.is_probably_scanned,
+        extraction_reasons=quality.reasons,
+    )

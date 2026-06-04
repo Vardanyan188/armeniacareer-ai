@@ -1,0 +1,14 @@
+# ArmeniaCareer AI — Streamlit theme.
+# Dark base so native widgets (dataframes, selects, inputs) render dark and
+# consistent with the premium UI defined in src/ui/components/ui_kit.py.
+
+[theme]
+base = "dark"
+backgroundColor = "#0e1117"
+secondaryBackgroundColor = "#161b22"
+primaryColor = "#4f9d77"
+textColor = "#e6e8eb"
+font = "sans serif"
+
+[client]
+toolbarMode = "minimal"

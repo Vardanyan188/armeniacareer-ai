@@ -1,0 +1,17 @@
+Summary
+Backend engineer with 4 years of experience building APIs and data services.
+
+Work Experience
+Acme — Backend Engineer
+Jan 2022 – Present
+- Built REST services in Python and Django, reduced latency by 40%.
+- Deployed containers on Docker with PostgreSQL.
+
+Education
+BSc Computer Science, Yerevan State University, 2018–2022
+
+Skills
+Python, Django, Docker, PostgreSQL, SQL, Git
+
+Languages
+English, Armenian

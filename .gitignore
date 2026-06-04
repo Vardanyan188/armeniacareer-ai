@@ -1,0 +1,58 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.env
+.streamlit/secrets.toml
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data with personal/sensitive files
+data/raw/
+data/uploads/
+data/private/
+data/reports/
+data/chroma_db/
+data/processed/
+outputs/
+artifacts/
+
+# Logs
+*.log
+logs/
+
+# Large/generated files
+*.sqlite
+*.db
+*.parquet
+*.pkl
+*.joblib
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Local-only AI tool workspace notes
+CLAUDE.md

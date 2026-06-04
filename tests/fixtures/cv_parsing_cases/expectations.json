@@ -1,0 +1,42 @@
+{
+  "cases": [
+    {
+      "file": "cv_en_backend.txt",
+      "expected_sections": ["summary", "experience", "education", "skills", "languages"],
+      "expected_languages": ["English"],
+      "expected_band": "good"
+    },
+    {
+      "file": "cv_hy.txt",
+      "expected_sections": ["summary", "experience", "education", "skills", "languages"],
+      "expected_languages": ["Armenian"],
+      "expected_band": "good"
+    },
+    {
+      "file": "cv_ru.txt",
+      "expected_sections": ["summary", "experience", "education", "skills", "languages"],
+      "expected_languages": ["Russian"],
+      "expected_band": "good"
+    },
+    {
+      "file": "cv_mixed.txt",
+      "expected_sections": ["summary", "experience", "education", "skills"],
+      "expected_languages": ["English"],
+      "expected_band": "good"
+    },
+    {
+      "file": "cv_low.txt",
+      "expected_sections": [],
+      "expected_languages": [],
+      "expected_band": "low"
+    }
+  ],
+  "date_cases": [
+    {"input": "Jan 2024 – Present", "start_year": 2024, "is_current": true},
+    {"input": "2021–2023", "start_year": 2021, "is_current": false},
+    {"input": "01.2024-05.2025", "start_year": 2024, "is_current": false},
+    {"input": "2023-ից մինչ օրս", "start_year": 2023, "is_current": true},
+    {"input": "март 2020 — сентябрь 2021", "start_year": 2020, "is_current": false},
+    {"input": "2018–2022", "start_year": 2018, "is_current": false}
+  ]
+}
