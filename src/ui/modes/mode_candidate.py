@@ -32,6 +32,15 @@ from src.ui.components.ui_kit import (
     step_header,
     trust_badges,
 )
+from src.ui.i18n import current_lang, t, tlist
+
+
+def _trust_labels(lang: str) -> list:
+    return [
+        t("trust.offline_ready", lang), t("trust.deterministic_fallback", lang),
+        t("trust.private_excluded", lang), t("trust.decision_support", lang),
+        t("trust.no_auto_hiring", lang),
+    ]
 from src.ui.tabs.tab_candidate_room import render_candidate_room
 from src.ui.tabs.tab_shared_analysis import render_shared_analysis_tab
 from src.ui.upload_utils import temp_jd_text, temp_upload
@@ -44,31 +53,26 @@ _CANDIDATE_STEPS = ["CV", "Compare", "Results", "Practice", "Quiz"]
 
 
 def render_candidate_mode() -> None:
+    lang = current_lang()
     hero_panel(
-        "Improve your CV and prepare for interviews",
-        "Upload your CV for a private, local analysis — quality, skills, gaps, and practice.",
-        icon="◆",
+        t("hero.candidate.title", lang), t("hero.candidate.subtitle", lang), icon="◆",
     )
     has_result = st.session_state.get("candidate_result") is not None
     has_cv = st.session_state.get("candidate_cv_upload") is not None
-    stepper(_CANDIDATE_STEPS, active=("Results" if has_result else "Compare" if has_cv else "CV"))
-    trust_badges()
-
-    st.caption(
-        "Upload your own CV. Your file is processed locally in a temporary file "
-        "and deleted right after analysis."
+    stepper(
+        tlist("steps.candidate", lang) or _CANDIDATE_STEPS,
+        active=(3 if has_result else 2 if has_cv else 1),
     )
+    trust_badges(_trust_labels(lang))
 
-    step_header("1", "Your CV")
+    step_header("1", t("candidate.cv_step", lang))
     uploaded = st.file_uploader(
-        "Upload your CV", type=["pdf", "docx", "txt", "md"], key="candidate_cv_upload"
+        t("candidate.upload_cv", lang), type=["pdf", "docx", "txt", "md"],
+        key="candidate_cv_upload",
     )
-    st.caption(
-        "Accepted: PDF, DOCX, TXT, MD. Text-based PDFs work best — scanned/image "
-        "PDFs may be flagged as low extraction quality (OCR is not implemented yet)."
-    )
+    st.caption(t("candidate.format_caption", lang))
     if uploaded is None:
-        empty_state("◆", "No CV uploaded yet", "Upload a CV to see your CV intelligence report.")
+        empty_state("◆", t("candidate.no_cv_title", lang), t("candidate.no_cv_hint", lang))
         return
 
     # ── Section A: CV-only intelligence ────────────────────────────────────
@@ -102,7 +106,7 @@ def render_candidate_mode() -> None:
     st.divider()
 
     # ── Section B: optional comparison against a specific job ──────────────
-    step_header("2", "Compare to a specific job (optional)")
+    step_header("2", t("candidate.compare_step", lang))
     jd_text = st.text_area("Paste the job description text", key="candidate_jd_text", height=160)
     col1, col2, col3 = st.columns(3)
     role_title = col1.text_input("Target role (optional)", key="candidate_role")
@@ -111,7 +115,7 @@ def render_candidate_mode() -> None:
 
     running = st.session_state.get("candidate_compare_running", False)
     clicked = st.button(
-        "Running analysis…" if running else "Compare with this job",
+        "Running analysis…" if running else t("candidate.compare_button", lang),
         type="primary", key="candidate_compare", disabled=running,
     )
     if clicked and not running:
@@ -143,7 +147,7 @@ def render_candidate_mode() -> None:
 
     # ── Results ────────────────────────────────────────────────────────────
     st.divider()
-    step_header("3", "Results")
+    step_header("3", t("candidate.results", lang))
     shared = get_shared_view(result.payload)
     score_card("Composite match", shared["composite_score_percentage"])
 

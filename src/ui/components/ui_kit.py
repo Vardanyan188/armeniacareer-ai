@@ -112,7 +112,8 @@ def inject_global_style() -> None:
     st.markdown(
         f"""
 <style>
-.block-container {{ max-width:1120px; padding-top:1.4rem; padding-bottom:3rem; }}
+/* Extra top padding so the header/brand never tucks under Streamlit's top bar. */
+.block-container {{ max-width:1120px; padding-top:2.4rem; padding-bottom:3rem; }}
 h1,h2,h3,h4,h5 {{ font-weight:650; letter-spacing:0.2px; }}
 section[data-testid="stSidebar"] {{ border-right:1px solid {_BORDER}; }}
 [data-testid="stMetric"] {{
@@ -386,6 +387,62 @@ def hero_panel(title: str, subtitle: str = "", icon: str = "") -> None:
 def status_chip_html(label: str, kind: str = "neutral") -> str:
     """Alias builder for a single status chip (reuses the badge styling)."""
     return badge(label, kind)
+
+
+# ── Phase 24.3A: brand lockup + app header (pure HTML builders) ──────────────
+
+def brand_mark_svg(size: int = 28) -> str:
+    """Inline SVG brand mark — a stylized peak/'A' in the brand green."""
+    s = int(size)
+    return (
+        f"<svg width='{s}' height='{s}' viewBox='0 0 28 28' fill='none' "
+        f"xmlns='http://www.w3.org/2000/svg' aria-hidden='true'>"
+        f"<rect x='0.5' y='0.5' width='27' height='27' rx='8' fill='#15301f' "
+        f"stroke='#2a4d3a'/>"
+        f"<path d='M14 6 L21 21 H17 L14 14.5 L11 21 H7 Z' fill='#7fd1a3'/>"
+        f"<circle cx='14' cy='10' r='1.4' fill='#cdeede'/>"
+        f"</svg>"
+    )
+
+
+def brand_lockup_html(name: str, tagline: str) -> str:
+    """Sidebar brand lockup: mark + full wordmark + tagline."""
+    safe_name = html.escape(str(name))
+    safe_tag = html.escape(str(tagline))
+    return (
+        "<div style='display:flex;align-items:center;gap:10px;margin-bottom:2px'>"
+        f"{brand_mark_svg(28)}"
+        f"<span style='font-size:1.05rem;font-weight:700;letter-spacing:0.3px;"
+        f"color:{_TEXT}'>{safe_name}</span></div>"
+        f"<div style='color:{_TEXT_MUTED};font-size:0.7rem;text-transform:uppercase;"
+        f"letter-spacing:1.5px;margin:0 0 14px 38px'>{safe_tag}</div>"
+    )
+
+
+def app_header_html(
+    name: str, mode_name: str, intro: str, *, badge_text: str = "", icon: str = "",
+) -> str:
+    """Clean main header band: wordmark + current workspace + intro."""
+    safe_name = html.escape(str(name))
+    safe_mode = html.escape(str(mode_name))
+    safe_intro = html.escape(str(intro))
+    safe_icon = html.escape(str(icon))
+    chip = (
+        f"<span style='background:#2e2410;color:#e0b766;border:1px solid {_BORDER};"
+        f"padding:2px 10px;border-radius:10px;font-size:0.72rem;margin-left:10px'>"
+        f"{html.escape(str(badge_text))}</span>" if badge_text else ""
+    )
+    return (
+        f"<div style='background:{_SURFACE};border:1px solid {_BORDER};border-radius:14px;"
+        f"padding:16px 20px;margin-bottom:14px'>"
+        "<div style='display:flex;align-items:center;gap:10px'>"
+        f"{brand_mark_svg(26)}"
+        f"<span style='font-size:1.12rem;font-weight:700;color:{_TEXT}'>{safe_name}</span>"
+        f"{chip}</div>"
+        f"<div style='color:{_TEXT_MUTED};font-size:0.9rem;margin-top:8px'>"
+        f"{safe_icon}&nbsp; <span style='color:{_TEXT_LABEL};font-weight:600'>{safe_mode}</span>"
+        f" — {safe_intro}</div></div>"
+    )
 
 
 # ── Phase 21.3: Focus / Presentation mode + Print comfort (CSS only) ─────────

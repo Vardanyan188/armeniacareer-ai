@@ -11,6 +11,7 @@ from typing import Any, List, Optional, Tuple
 import streamlit as st
 
 from src.ui.components.ui_kit import badge
+from src.ui.i18n import t
 
 # Static product / checkpoint label (NOT read from git at runtime).
 CHECKPOINT_LABEL = "ArmeniaCareer AI · MVP (build 21.1)"
@@ -47,7 +48,7 @@ def ingest_enabled() -> bool:
 
 
 def ingest_status_label() -> str:
-    return "Ingest: enabled" if ingest_enabled() else "Ingest: disabled"
+    return t("status.ingest_enabled") if ingest_enabled() else t("status.ingest_disabled")
 
 
 def provider_status_label(result: Any = None) -> str:
@@ -70,8 +71,8 @@ def status_chips(mode: str, result: Any = None) -> List[Tuple[str, str]]:
     """Pure list of (label, kind) chips for the global utility bar."""
     return [
         (CHECKPOINT_LABEL, "neutral"),
-        (f"Workspace: {mode}", "info"),
-        ("Local only · not committed", "good"),
+        (f"{t('util.workspace_prefix')}: {mode}", "info"),
+        (t("status.local_only"), "good"),
         (provider_status_label(result), "neutral"),
         (ingest_status_label(), "warn" if ingest_enabled() else "neutral"),
     ]
@@ -80,12 +81,12 @@ def status_chips(mode: str, result: Any = None) -> List[Tuple[str, str]]:
 def sidebar_status_chips(mode: str) -> List[Tuple[str, str]]:
     """Pure list of (label, kind) chips for the sidebar status block."""
     return [
-        (f"Mode: {mode}", "info"),
-        ("Local data safe", "good"),
-        ("Candidate Pool protected", "good"),
+        (f"{t('status.mode_prefix')}: {mode}", "info"),
+        (t("status.local_data_safe"), "good"),
+        (t("status.pool_protected"), "good"),
         (ingest_status_label(), "warn" if ingest_enabled() else "neutral"),
-        ("Fallback-ready · API optional", "neutral"),
-        ("Decision-support only", "neutral"),
+        (t("status.fallback_ready"), "neutral"),
+        (t("status.decision_support"), "neutral"),
     ]
 
 
@@ -123,19 +124,20 @@ def render_utility_bar(mode: str, result: Any = None) -> None:
         st.markdown(utility_bar_html(mode, result), unsafe_allow_html=True)
     with col_focus:
         st.toggle(
-            "Focus mode", key=_FOCUS_KEY,
+            t("util.focus_mode"), key=_FOCUS_KEY,
             help="Presentation-friendly layout. Warnings and disclaimers stay visible.",
         )
     with col_reset:
-        if st.button("Reset", key="util_reset", help="Clear analysis results for this session."):
+        if st.button(t("util.reset"), key="util_reset",
+                     help="Clear analysis results for this session."):
             for key in _RESET_KEYS:
                 st.session_state.pop(key, None)
             st.rerun()
 
     if is_focus_mode():
         st.markdown(
-            badge("Presentation ready", "good")
-            + badge("Print: Ctrl/Cmd + P", "info"),
+            badge(t("util.presentation_ready"), "good")
+            + badge(t("util.print_hint"), "info"),
             unsafe_allow_html=True,
         )
 

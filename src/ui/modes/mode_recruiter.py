@@ -25,21 +25,32 @@ from src.ui.components.ui_kit import (
     step_header,
     trust_badges,
 )
+from src.ui.i18n import current_lang, t, tlist
 
 _RECRUITER_STEPS = ["JD", "CVs", "Ranking", "Review", "Verify"]
+
+
+def _trust_labels(lang: str) -> list:
+    return [
+        t("trust.offline_ready", lang), t("trust.deterministic_fallback", lang),
+        t("trust.private_excluded", lang), t("trust.decision_support", lang),
+        t("trust.no_auto_hiring", lang),
+    ]
 
 _LANGUAGES = ["hy", "en", "ru"]
 _SENIORITY = ["intern", "junior", "mid", "senior", "lead"]
 
 
 def render_recruiter_mode() -> None:
+    lang = current_lang()
     hero_panel(
-        "Rank candidates and verify evidence",
-        "Provide a job description, upload candidate CVs, then review a recruiter-safe ranking.",
-        icon="◈",
+        t("hero.recruiter.title", lang), t("hero.recruiter.subtitle", lang), icon="◈",
     )
-    stepper(_RECRUITER_STEPS, active=("Ranking" if st.session_state.get("recruiter_bulk") else "JD"))
-    trust_badges()
+    stepper(
+        tlist("steps.recruiter", lang) or _RECRUITER_STEPS,
+        active=(3 if st.session_state.get("recruiter_bulk") else 1),
+    )
+    trust_badges(_trust_labels(lang))
 
     st.caption(
         "Decision-support only. Provide a job description and upload candidate "
@@ -79,7 +90,7 @@ def render_recruiter_mode() -> None:
     seniority = col2.selectbox("Required seniority", _SENIORITY, index=2, key="rec_seniority")
 
     if not cvs:
-        empty_state("◈", "No candidate CVs yet", "Upload at least one candidate CV to continue.")
+        empty_state("◈", t("recruiter.no_cv_title", lang), t("recruiter.no_cv_hint", lang))
         with st.expander("Approved candidate pool (read-only)"):
             render_approved_pool()
         return
