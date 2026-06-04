@@ -15,6 +15,7 @@ from src.ui.components.export_panel import render_admin_export
 from src.ui.components.governance_panel import render_governance_panel
 from src.ui.components.jd_version_panel import render_jd_version_panel
 from src.ui.components.ui_kit import empty_state, hero_panel, notice, stepper
+from src.ui.i18n import current_lang, t, tlist
 from src.ui.tabs.tab_candidate_room import render_candidate_room
 from src.ui.tabs.tab_input import render_input_tab
 from src.ui.tabs.tab_recruiter_room import render_recruiter_room
@@ -25,26 +26,19 @@ _ADMIN_STEPS = ["Select data", "Analyze", "Inspect", "Governance"]
 
 
 def render_admin_mode() -> None:
+    lang = current_lang()
     if not is_admin_enabled():
         # Defense in depth: Admin is normally hidden from the switcher in public.
         log_security_event("admin_access_denied", severity="blocked", mode="Admin · Demo")
-        notice("Admin / Demo tools are disabled in this environment.", "warn")
+        notice(t("admin.disabled_notice", lang), "warn")
         return
 
-    hero_panel(
-        "Internal demo and governance tools",
-        "Run the deterministic pipeline over local sample data and inspect every layer.",
-        icon="▣",
-    )
+    hero_panel(t("hero.admin.title", lang), t("hero.admin.subtitle", lang), icon="▣")
     stepper(
-        _ADMIN_STEPS,
-        active=("Inspect" if st.session_state.get("analysis_result") else "Select data"),
+        tlist("steps.admin", lang) or _ADMIN_STEPS,
+        active=(3 if st.session_state.get("analysis_result") else 1),
     )
-    notice(
-        "Internal Demo Mode — uses the local sample datasets in data/raw. "
-        "Not for real candidate users. All four detail tabs are shown for testing.",
-        "warn",
-    )
+    notice(t("admin.internal_notice", lang), "warn")
 
     render_input_tab()
 
