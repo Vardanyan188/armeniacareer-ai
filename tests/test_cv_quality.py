@@ -78,6 +78,65 @@ def test_analyze_cv_quality_exposes_extraction_fields(tmp_path):
     assert isinstance(report.extraction_reasons, list)
 
 
+# Synthetic CV mimicking the failing real-CV template — FAKE personal data only.
+_NONSTANDARD_CV = """
+PROFILE
+Motivated computer-science student seeking an internship. Quick learner with
+hands-on project work and a strong interest in software and data.
+
+CONTACT ME
+Email: fake.student@example.com
+Phone: +374 00 000000
+City: Yerevan
+
+EDUCATION
+BSc Computer Science, Some University (2021-2025), GPA 3.8
+
+WORK EXPERIENCE
+Intern, Example Software LLC (2023)
+- Built small tools and helped the engineering team with testing.
+
+VOLUNTEER EXPERIENCE
+Coding club mentor (2022) — taught 20 students basic programming.
+
+LANGUAGE
+English, Armenian
+
+COMPUTER SKILLS
+Python, SQL, HTML/CSS/JavaScript, MS Office, Scratch/Kturtle/FreeCad
+"""
+
+
+def test_nonstandard_cv_is_parsed_robustly(tmp_path):
+    report = analyze_cv_quality(_write(tmp_path, _NONSTANDARD_CV, name="cv_ns.txt"))
+
+    # Sections recognised despite non-standard headings.
+    assert report.sections_present["summary"] is True       # PROFILE
+    assert report.sections_present["education"] is True      # EDUCATION
+    assert report.sections_present["experience"] is True     # WORK EXPERIENCE
+    assert report.sections_present["skills"] is True         # COMPUTER SKILLS
+    assert report.contact_info_present is True               # email/phone + CONTACT ME
+
+    # Skills extracted, including slash-separated lists split on boundaries.
+    found = set(report.detected_skills)
+    assert {"Python", "SQL", "HTML", "CSS", "JavaScript"} <= found
+    assert {"Scratch", "KTurtle", "FreeCAD"} <= found
+    assert "MS Office" in found
+
+    # Quality score is meaningfully higher than a false-low (< 0.5) result.
+    assert report.quality_score >= 0.75
+
+    # No real PII leaks into the structured report (fake data only here anyway).
+    assert "fake.student@example.com" not in report.detected_skills
+
+
+def test_education_detected_from_content_without_heading(tmp_path):
+    # No EDUCATION heading, but content cues (university + year) should count.
+    cv = "PROFILE\nstudent\n\nStudied at Some University, BSc 2024.\n\nCOMPUTER SKILLS\nPython, SQL\n"
+    report = analyze_cv_quality(_write(tmp_path, cv, name="cv_edu.txt"))
+    assert report.sections_present["education"] is True
+
+
 def test_analyze_cv_quality_detects_multilingual_sections(tmp_path):
     hy_cv = (
         "Ամփոփում\nՓորձառու ծրագրավորող։\n\n"

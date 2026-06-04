@@ -48,3 +48,24 @@ def test_no_false_positive_on_prose():
     # that doesn't START with the alias is not misdetected.
     labels = detected_section_labels(text)
     assert "education" not in labels
+
+
+def test_nonstandard_heading_aliases_phase24():
+    # Mirrors the failing real-CV template (uppercase, non-standard headings).
+    text = (
+        "PROFILE\nMotivated student.\n\n"
+        "CONTACT ME\ncity\n\n"
+        "EDUCATION\nDegree\n\n"
+        "WORK EXPERIENCE\nrole\n\n"
+        "VOLUNTEER EXPERIENCE\nhelped\n\n"
+        "LANGUAGE\nEnglish\n\n"
+        "COMPUTER SKILLS\nPython, SQL\n"
+    )
+    labels = set(detected_section_labels(text))
+    assert {"summary", "contact", "education", "experience", "languages", "skills"} <= labels
+
+
+def test_internship_and_degree_aliases():
+    text = "INTERNSHIP\nIntern at X\n\nDEGREE\nBSc\n"
+    labels = set(detected_section_labels(text))
+    assert "experience" in labels and "education" in labels

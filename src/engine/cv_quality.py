@@ -106,6 +106,32 @@ def _detect_languages(low_text: str) -> List[str]:
     return [lang for lang, cues in _LANGUAGE_KEYWORDS.items() if any(c in low_text for c in cues)]
 
 
+# Content cues that imply a section even when its heading is unusual or the text
+# order is messy (e.g. a two-column PDF). Used only to ADD presence, never remove.
+_EDU_CONTENT_CUES = [
+    "university", "bachelor", "master", "faculty", "diploma", "phd", "b.sc", "m.sc",
+    "b.s.", "m.s.", "institute", "college", "high school", "gpa", "degree",
+]
+_EXP_ROLE_CUES = [
+    "intern", "internship", "engineer", "developer", "analyst", "manager",
+    "team lead", "tech lead", "consultant", "specialist", "designer", "company",
+    "ltd", "llc",
+]
+_YEAR_RE = re.compile(r"\b(19|20)\d{2}\b")
+
+
+def _augment_sections(sections: Dict[str, bool], low_text: str, skill_count: int) -> Dict[str, bool]:
+    """Adds section presence from content cues (heading-agnostic robustness)."""
+    if not sections.get("education") and any(c in low_text for c in _EDU_CONTENT_CUES):
+        sections["education"] = True
+    if not sections.get("experience") and _YEAR_RE.search(low_text) \
+            and any(c in low_text for c in _EXP_ROLE_CUES):
+        sections["experience"] = True
+    if not sections.get("skills") and skill_count >= 2:
+        sections["skills"] = True
+    return sections
+
+
 def _suggest_roles(skills: List[str]) -> List[str]:
     skill_set = set(skills)
     scored = []
@@ -162,9 +188,14 @@ def analyze_cv_quality(cv_path: PathLike) -> CVQualityReport:
         any(kw in low_text for kw in ("email", "e-mail", "phone", "հեռախոս", "эл. почта"))
 
     skills = _detect_skills(low_text)
-    # Robust multilingual section detection (canonical labels → tracked subset).
+    # Robust multilingual section detection (canonical labels → tracked subset),
+    # then augment from content cues so unusual headings / two-column layouts
+    # don't produce false "missing section" results.
     detected_labels = set(detected_section_labels(text))
     sections = {s: (s in detected_labels) for s in _TRACKED_SECTIONS}
+    sections = _augment_sections(sections, low_text, len(skills))
+    # A detected Contact heading also counts as contact present.
+    contact_present = contact_present or ("contact" in detected_labels)
     languages = detect_languages(text)
     word_count = len(text.split())
     has_metric = ("%" in text) or bool(re.search(r"\b\d{2,}\b", text))

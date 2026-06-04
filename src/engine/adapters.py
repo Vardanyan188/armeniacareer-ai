@@ -229,6 +229,15 @@ MVP_SKILL_ALIASES = {
     "Excel": ["excel"],
     "Git": ["git"],
     "Linux": ["linux"],
+    # Web / office / education tooling (Phase 24.0 parser robustness).
+    "HTML": ["html", "html5"],
+    "CSS": ["css", "css3"],
+    "MS Office": ["ms office", "microsoft office"],
+    "Word": ["microsoft word", "ms word"],
+    "PowerPoint": ["powerpoint", "power point"],
+    "Scratch": ["scratch"],
+    "KTurtle": ["kturtle"],
+    "FreeCAD": ["freecad", "free cad"],
 }
 
 # Phrases that mark a line as describing *preferred* (not required) skills.
@@ -241,13 +250,44 @@ _PREFERRED_INDICATORS = [
 # Section header keywords (English / Armenian / Russian).
 _RESP_HEADER_KW = [
     "responsibilit", "duties", "what you will", "you will", "job description",
+    "role overview", "overview", "about the role", "the role", "what you'll do",
     "պարտականություն", "обязанности", "задачи",
 ]
 _QUAL_HEADER_KW = [
     "requirement", "qualification", "necessary skills", "required skills",
-    "what we expect", "we expect", "professional skills", "skills",
+    "preferred skills", "preferred qualifications", "nice to have", "nice-to-have",
+    "desired skills", "key skills", "must have", "must-have", "skills",
+    "what we expect", "we expect", "professional skills", "experience", "seniority",
+    "level",
     "անհրաժեշտ", "պահանջ", "հմտություն", "требовани", "квалификаци", "навыки",
 ]
+
+# Explicit "Seniority: X" / "Level: X" label tokens → canonical level.
+_EXPLICIT_SENIORITY_TOKENS = [
+    (SeniorityLevel.EXECUTIVE, ["executive", "c-level", "head of", "director", "vp"]),
+    (SeniorityLevel.PRINCIPAL, ["principal"]),
+    (SeniorityLevel.LEAD, ["lead", "team lead", "tech lead"]),
+    (SeniorityLevel.SENIOR, ["senior", "sr."]),
+    (SeniorityLevel.MID, ["mid-level", "mid level", "middle", "intermediate"]),
+    (SeniorityLevel.JUNIOR, ["junior", "jr.", "entry-level", "entry level"]),
+    (SeniorityLevel.INTERN, ["intern", "internship", "trainee"]),
+]
+
+
+def _detect_explicit_seniority(raw_text: str) -> Optional[SeniorityLevel]:
+    """
+    Returns a seniority level ONLY when the JD has an explicit 'Seniority:' or
+    'Level:' labelled line (precise; avoids reclassifying JDs that merely mention
+    a level word in prose, so existing scores are unaffected).
+    """
+    match = re.search(r"(?:^|\n)\s*(?:seniority|level)\s*[:\-]\s*([^\n]+)", raw_text.lower())
+    if not match:
+        return None
+    scope = match.group(1)
+    for level, tokens in _EXPLICIT_SENIORITY_TOKENS:
+        if any(tok in scope for tok in tokens):
+            return level
+    return None
 
 
 def _alias_pattern(alias: str) -> "re.Pattern[str]":
@@ -408,6 +448,13 @@ def jd_json_to_jd_entities(jd: dict) -> JDEntities:
         if qual_line not in qualifications:
             qualifications.insert(0, qual_line)
 
+    # Seniority: an explicit "Seniority:/Level:" label overrides the years/title
+    # inference; otherwise fall back to the existing deterministic inference.
+    required_seniority = (
+        _detect_explicit_seniority(raw_text)
+        or infer_seniority_from_years(required_years, role_title)
+    )
+
     return JDEntities(
         role_title=role_title,
         company_context=company_context,
@@ -417,7 +464,7 @@ def jd_json_to_jd_entities(jd: dict) -> JDEntities:
         required_skills=required_skills,
         preferred_skills=preferred_skills,
         required_experience_years=required_years,
-        required_seniority=infer_seniority_from_years(required_years, role_title),
+        required_seniority=required_seniority,
         industry=industry,
         location=geography,
         work_arrangement=work_arrangement,

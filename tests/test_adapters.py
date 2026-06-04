@@ -300,3 +300,52 @@ def test_skills_output_manual_map_from_dict_with_entries():
     assert len(res.matched_skills) == 1
     assert res.matched_skills[0].canonical_name == "Python"
     assert res.gap_severity == GapSeverity.MINOR
+
+
+# ---------------------------------------------------------------------------
+# Phase 24.0 — JD parsing robustness (messy / non-standard labels)
+# ---------------------------------------------------------------------------
+
+_MESSY_JD = {
+    "role_title": "Software Engineer",
+    "raw_text": (
+        "Role Overview:\n"
+        "Join our team to build data tools.\n"
+        "Responsibilities:\n"
+        "- Develop services in Python and SQL\n"
+        "- Build UI with HTML/CSS/JavaScript\n"
+        "Required Skills:\n"
+        "- Python, SQL, Docker\n"
+        "Preferred: GraphQL and Kafka are a plus\n"
+        "Seniority: Senior\n"
+    ),
+}
+
+
+def test_jd_robustness_extracts_skills_and_sections():
+    jd = jd_json_to_jd_entities(_MESSY_JD)
+    req = {s.canonical_name for s in jd.required_skills}
+    assert {"Python", "SQL", "Docker", "HTML", "CSS", "JavaScript"} <= req
+    assert jd.responsibilities  # responsibilities captured under "Role Overview"/"Responsibilities"
+
+
+def test_jd_robustness_preferred_skills_detected():
+    jd = jd_json_to_jd_entities(_MESSY_JD)
+    pref = {s.canonical_name for s in jd.preferred_skills}
+    # "are a plus" marks the line as preferred.
+    assert {"GraphQL", "Kafka"} <= pref
+
+
+def test_jd_robustness_explicit_seniority_label():
+    jd = jd_json_to_jd_entities(_MESSY_JD)
+    assert jd.required_seniority == SeniorityLevel.SENIOR
+
+
+def test_jd_explicit_seniority_only_on_label():
+    # A JD that merely mentions "senior" in prose (no label) should NOT be forced
+    # to senior — the years/title inference still applies.
+    jd = jd_json_to_jd_entities({
+        "role_title": "Engineer",
+        "raw_text": "We work with senior stakeholders. Requirements: Python.",
+    })
+    assert jd.required_seniority != SeniorityLevel.SENIOR
